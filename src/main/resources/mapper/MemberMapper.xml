@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.petshop.community.mapper.MemberMapper">
+
+    <!-- ResultMap 정의 -->
+    <resultMap id="MemberResultMap" type="com.petshop.community.dto.MemberDto">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="nickname" column="nickname"/>
+        <result property="phone" column="phone"/>
+        <result property="profileImage" column="profile_image"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="verified" column="is_verified"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="verifiedBy" column="verified_by"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 사용자명으로 회원 조회 (로그인용) -->
+    <select id="findByUsername" parameterType="String" resultMap="MemberResultMap">
+        SELECT 
+            id, username, password, email, nickname, phone, profile_image,
+            role, status, is_verified, verified_at, verified_by,
+            last_login_at, created_at, updated_at
+        FROM members 
+        WHERE username = #{username}
+    </select>
+
+    <!-- 이메일로 회원 조회 -->
+    <select id="findByEmail" parameterType="String" resultMap="MemberResultMap">
+        SELECT 
+            id, username, password, email, nickname, phone, profile_image,
+            role, status, is_verified, verified_at, verified_by,
+            last_login_at, created_at, updated_at
+        FROM members 
+        WHERE email = #{email}
+    </select>
+
+    <!-- ID로 회원 조회 -->
+    <select id="findById" parameterType="Long" resultMap="MemberResultMap">
+        SELECT 
+            id, username, password, email, nickname, phone, profile_image,
+            role, status, is_verified, verified_at, verified_by,
+            last_login_at, created_at, updated_at
+        FROM members 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 회원 가입 -->
+    <insert id="insertMember" parameterType="com.petshop.community.dto.MemberDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO members (
+            username, password, email, nickname, phone, profile_image, role, status
+        ) VALUES (
+            #{username}, #{password}, #{email}, #{nickname}, #{phone}, 
+            #{profileImage}, #{role}, #{status}
+        )
+    </insert>
+
+    <!-- 회원 정보 수정 -->
+    <update id="updateMember" parameterType="com.petshop.community.dto.MemberDto">
+        UPDATE members 
+        SET 
+            email = #{email},
+            nickname = #{nickname},
+            phone = #{phone},
+            profile_image = #{profileImage},
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 마지막 로그인 시간 업데이트 -->
+    <update id="updateLastLoginTime" parameterType="String">
+        UPDATE members 
+        SET last_login_at = CURRENT_TIMESTAMP
+        WHERE username = #{username}
+    </update>
+
+    <!-- 사용자명 중복 체크 -->
+    <select id="existsByUsername" parameterType="String" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM members WHERE username = #{username}
+        )
+    </select>
+
+    <!-- 이메일 중복 체크 -->
+    <select id="existsByEmail" parameterType="String" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM members WHERE email = #{email}
+        )
+    </select>
+
+</mapper>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<markup xmlns="http://www.navercorp.com/lucy-xss-markup">
+    
+    <!-- 기본 블록 요소 -->
+    <element name="div">
+        <attribute name="class"/>
+        <attribute name="style"/>
+    </element>
+    
+    <element name="p">
+        <attribute name="class"/>
+        <attribute name="style"/>
+    </element>
+    
+    <element name="span">
+        <attribute name="class"/>
+        <attribute name="style"/>
+    </element>
+    
+    <!-- 줄바꿈 -->
+    <element name="br"/>
+    <element name="hr"/>
+    
+    <!-- 텍스트 서식 -->
+    <element name="strong"/>
+    <element name="b"/>
+    <element name="em"/>
+    <element name="i"/>
+    <element name="u"/>
+    
+    <!-- 제목 -->
+    <element name="h1"/>
+    <element name="h2"/>
+    <element name="h3"/>
+    <element name="h4"/>
+    <element name="h5"/>
+    <element name="h6"/>
+    
+    <!-- 링크 -->
+    <element name="a">
+        <attribute name="href">
+            <value>http://*</value>
+            <value>https://*</value>
+            <value>/*</value>
+        </attribute>
+        <attribute name="target">
+            <value>_blank</value>
+            <value>_self</value>
+        </attribute>
+        <attribute name="title"/>
+    </element>
+    
+    <!-- 이미지 -->
+    <element name="img">
+        <attribute name="src">
+            <value>http://*</value>
+            <value>https://*</value>
+            <value>/*</value>
+        </attribute>
+        <attribute name="alt"/>
+        <attribute name="width"/>
+        <attribute name="height"/>
+        <attribute name="title"/>
+    </element>
+    
+    <!-- 목록 -->
+    <element name="ul"/>
+    <element name="ol"/>
+    <element name="li"/>
+    
+    <!-- 테이블 -->
+    <element name="table">
+        <attribute name="border"/>
+        <attribute name="cellspacing"/>
+        <attribute name="cellpadding"/>
+    </element>
+    <element name="thead"/>
+    <element name="tbody"/>
+    <element name="tr"/>
+    <element name="th">
+        <attribute name="colspan"/>
+        <attribute name="rowspan"/>
+    </element>
+    <element name="td">
+        <attribute name="colspan"/>
+        <attribute name="rowspan"/>
+    </element>
+    
+    <!-- 인용 -->
+    <element name="blockquote"/>
+    
+</markup>

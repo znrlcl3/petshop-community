@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>회원가입 - 펫샵 커뮤니티</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">📝 회원가입</h3>
+                        
+                        <form th:action="@{/signup}" th:object="${signupDto}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">아이디 *</label>
+                                <input type="text" class="form-control" th:field="*{username}" 
+                                       th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''" 
+                                       placeholder="4자 이상 20자 이하, 영문+숫자">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">비밀번호 *</label>
+                                <input type="password" class="form-control" th:field="*{password}"
+                                       th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                                       placeholder="8자 이상, 대소문자+숫자+특수문자">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">이메일 *</label>
+                                <input type="email" class="form-control" th:field="*{email}"
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                                       placeholder="example@domain.com">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nickname" class="form-label">닉네임 *</label>
+                                <input type="text" class="form-control" th:field="*{nickname}"
+                                       th:classappend="${#fields.hasErrors('nickname')} ? 'is-invalid' : ''"
+                                       placeholder="2자 이상 10자 이하">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">휴대폰번호</label>
+                                <input type="text" class="form-control" th:field="*{phone}"
+                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                                       placeholder="010-0000-0000">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="agree" required>
+                                <label class="form-check-label" for="agree">
+                                    개인정보 처리방침 및 이용약관에 동의합니다. *
+                                </label>
+                            </div>
+                            
+                            <!-- 전역 오류 메시지 -->
+                            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                                <div th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 mb-3">회원가입</button>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p>이미 계정이 있으신가요? <a th:href="@{/login}">로그인</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block layout:fragment="script">
+        <script>
+        // 중복 체크 기능 (향후 구현)
+        $('#username').blur(function() {
+            // AJAX 중복 체크
+        });
+        
+        $('#email').blur(function() {
+            // AJAX 중복 체크
+        });
+        </script>
+    </th:block>
+</body>
+</html>

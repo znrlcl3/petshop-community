@@ -1,0 +1,12 @@
+<config xmlns="http://www.navercorp.com/lucy-xss">
+    <defenders>
+        <defender>
+            <n>strictDefender</n>
+            <class>com.navercorp.lucy.security.xss.markup.MarkupParser</class>
+        </defender>
+    </defenders>
+    
+    <filters>
+        <filter name="StrictFilter" defender="strictDefender"/>
+    </filters>
+</config>

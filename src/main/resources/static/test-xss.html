@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <title>XSS 테스트</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border: 1px solid #ddd; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .link-btn { display: inline-block; margin: 5px; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>XSS 필터 테스트</h1>
+        
+        <h3>즉시 테스트 (클릭만 하면 됩니다):</h3>
+        
+        <a href="/test/simple?input=%3Cscript%3Ealert('XSS')%3C/script%3E" target="_blank" class="link-btn">
+            스크립트 공격 테스트
+        </a>
+        
+        <a href="/test/simple?input=%3Cimg%20src=%22x%22%20onerror=%22alert('XSS')%22%3E" target="_blank" class="link-btn">
+            이미지 이벤트 공격
+        </a>
+        
+        <a href="/test/simple?input=%3Ca%20href=%22javascript:alert('XSS')%22%3E링크%3C/a%3E" target="_blank" class="link-btn">
+            자바스크립트 URL
+        </a>
+        
+        <a href="/test/simple?input=%3Cp%3E%3Cstrong%3E안전한%3C/strong%3E%20HTML%3C/p%3E" target="_blank" class="link-btn">
+            안전한 HTML
+        </a>
+        
+        <a href="/test/batch" target="_blank" class="link-btn">
+            전체 테스트
+        </a>
+        
+        <a href="/test/status" target="_blank" class="link-btn">
+            필터 상태
+        </a>
+        
+        <hr>
+        
+        <h3>📋 테스트 패턴 확인:</h3>
+        <ul>
+            <li><strong>스크립트 공격:</strong> <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></li>
+            <li><strong>이미지 이벤트:</strong> <code>&lt;img src="x" onerror="alert('XSS')"&gt;</code></li>
+            <li><strong>JS URL:</strong> <code>&lt;a href="javascript:alert('XSS')"&gt;링크&lt;/a&gt;</code></li>
+            <li><strong>안전한 HTML:</strong> <code>&lt;p&gt;&lt;strong&gt;안전한&lt;/strong&gt; HTML&lt;/p&gt;</code></li>
+        </ul>
+        
+        <hr>
+        
+        <h3>사용법:</h3>
+        <ol>
+            <li>위의 버튼들을 클릭하면 새 탭에서 테스트 결과를 볼 수 있습니다</li>
+            <li>서버 콘솔에서 필터링 로그를 확인하세요</li>
+            <li>XSS 공격이 차단되는지 확인하세요</li>
+        </ol>
+        
+        <div style="background: #f0f8ff; padding: 15px; margin: 20px 0; border-left: 4px solid #007bff;">
+            <strong>기대 결과:</strong>
+            <ul>
+                <li>위험한 패턴들 → 차단되거나 무력화됨</li>
+                <li>안전한 HTML → 그대로 유지됨</li>
+                <li>필터 상태 → "정상 작동 중" 표시</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

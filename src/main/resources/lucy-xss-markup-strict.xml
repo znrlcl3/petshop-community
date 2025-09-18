@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<markup xmlns="http://www.navercorp.com/lucy-xss-markup">
+    <!-- 텍스트 서식만 허용 -->
+    <element name="strong"/>
+    <element name="b"/>
+    <element name="em"/>
+    <element name="i"/>
+    <element name="br"/>
+</markup>
