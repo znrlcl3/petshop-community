@@ -35,18 +35,27 @@ public class CustomUserDetailsService implements UserDetailsService {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         
         // 기본 권한 추가
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + member.role()));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + member.getRole()));
         
-        // 검증된 회원에게 추가 권한 부여 (Record는 verified() 메서드 사용)
-        if (member.verified()) {
+        // 인증된 회원에게 추가 권한 부여
+        if (member.isVerified()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_VERIFIED"));
+            
+            // 인증 타입별 추가 권한
+            if (member.isExpert()) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_EXPERT"));
+            } else if (member.isBusiness()) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_BUSINESS"));
+            } else if (member.isInfluencer()) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_INFLUENCER"));
+            }
         }
         
         return User.builder()
-                .username(member.username())
-                .password(member.password())
-                .disabled(!member.status().equals("ACTIVE"))
-                .accountLocked(member.status().equals("SUSPENDED"))
+                .username(member.getUsername())
+                .password(member.getPassword())
+                .disabled(!member.isActive())
+                .accountLocked(member.isSuspended())
                 .authorities(authorities)
                 .build();
     }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>홈 - 펫샵 커뮤니티</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Hero Section -->
+        <div th:if="${!isLoggedIn}" class="jumbotron text-center mb-5">
+            <div class="position-relative">
+                <h1 class="display-3 fw-bold mb-4">펫샵 커뮤니티</h1>
+                <p class="lead mb-4">반려동물과 함께하는 행복한 일상을 공유하세요</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a class="btn btn-primary btn-lg hover-lift" th:href="@{/login}">
+                        로그인하기
+                    </a>
+                    <a class="btn btn-success btn-lg hover-lift" th:href="@{/signup}">
+                        회원가입
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Message for Logged-in Users -->
+        <div th:if="${isLoggedIn}" class="glass p-4 mb-5 text-center">
+            <h2 class="fw-bold mb-3">안녕하세요, <span th:text="${username}" class="text-primary"></span>님!</h2>
+            <p class="mb-3">오늘도 즐거운 하루 되세요</p>
+            <div class="d-flex justify-content-center flex-wrap gap-2">
+                <span th:each="authority : ${authorities}" 
+                      class="badge fs-6 px-3 py-2"
+                      th:classappend="${authority.authority.contains('ADMIN')} ? 'bg-danger' : 
+                                     (${authority.authority.contains('VERIFIED')} ? 'bg-success' : 'bg-primary')"
+                      th:text="${authority.authority}">
+                </span>
+            </div>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="row g-4 mb-5">
+            <!-- Community Section -->
+            <div class="col-lg-6">
+                <div class="card h-100 hover-lift">
+                    <div class="card-header">
+                        <h5 class="mb-0">커뮤니티 게시판</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">다양한 주제로 소통하고 정보를 공유해보세요</p>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a th:href="@{/board/free/list}" class="d-block p-3 rounded-3 text-decoration-none glass hover-lift h-100 text-center">
+                                    <div class="fs-2 mb-2">💭</div>
+                                    <div class="fw-semibold">자유게시판</div>
+                                    <small class="text-muted">자유로운 소통</small>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a th:href="@{/board/qna/list}" class="d-block p-3 rounded-3 text-decoration-none glass hover-lift h-100 text-center">
+                                    <div class="fs-2 mb-2">❓</div>
+                                    <div class="fw-semibold">질문답변</div>
+                                    <small class="text-muted">궁금한 것들</small>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a th:href="@{/board/review/list}" class="d-block p-3 rounded-3 text-decoration-none glass hover-lift h-100 text-center">
+                                    <div class="fs-2 mb-2">⭐</div>
+                                    <div class="fw-semibold">후기게시판</div>
+                                    <small class="text-muted">경험 공유</small>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a th:href="@{/board/trade/list}" class="d-block p-3 rounded-3 text-decoration-none glass hover-lift h-100 text-center">
+                                    <div class="fs-2 mb-2">🛒</div>
+                                    <div class="fw-semibold">중고거래</div>
+                                    <small class="text-muted">물품 거래</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pet Shop Section -->
+            <div class="col-lg-6">
+                <div class="card h-100 hover-lift">
+                    <div class="card-header">
+                        <h5 class="mb-0">펫샵 서비스</h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="text-muted mb-4">내 주변의 반려동물 관련 서비스를 찾아보세요</p>
+                        <div class="row g-3 flex-grow-1">
+                            <div class="col-12">
+                                <a th:href="@{/petshop/list}" class="d-block p-4 rounded-3 text-decoration-none glass hover-lift text-center">
+                                    <div class="fs-1 mb-3">🏪</div>
+                                    <h6 class="fw-bold mb-2">펫샵 찾기</h6>
+                                    <p class="small text-muted mb-0">지역별 펫샵 정보와 리뷰를 확인하세요</p>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-3 glass text-center h-100 d-flex flex-column justify-content-center">
+                                    <div class="fs-4 mb-2">🏥</div>
+                                    <small class="fw-semibold">동물병원</small>
+                                    <small class="text-muted">곧 출시</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-3 glass text-center h-100 d-flex flex-column justify-content-center">
+                                    <div class="fs-4 mb-2">✂️</div>
+                                    <small class="fw-semibold">미용실</small>
+                                    <small class="text-muted">곧 출시</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Dashboard for Logged-in Users -->
+        <div th:if="${isLoggedIn}" class="row g-4 mb-5">
+            <div class="col-12">
+                <h3 class="fw-bold mb-4">나의 활동</h3>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="stats-card hover-lift">
+                    <div class="fs-1 mb-3">👤</div>
+                    <h6 class="fw-bold mb-2">내 프로필</h6>
+                    <p class="small text-muted mb-3">개인정보 및 설정 관리</p>
+                    <a th:href="@{/member/profile}" class="btn btn-outline-primary btn-sm">보기</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="stats-card hover-lift">
+                    <div class="fs-1 mb-3">📝</div>
+                    <h6 class="fw-bold mb-2">내 게시글</h6>
+                    <p class="small text-muted mb-3">작성한 게시글 관리</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="alert('게시판 기능 개발 예정')">보기</button>
+                </div>
+            </div>
+
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <div class="stats-card hover-lift border-danger">
+                    <div class="fs-1 mb-3">⚙️</div>
+                    <h6 class="fw-bold mb-2 text-danger">관리자 메뉴</h6>
+                    <p class="small text-muted mb-3">시스템 관리 및 운영</p>
+                    <a th:href="@{/admin/dashboard}" class="btn btn-danger btn-sm">대시보드</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">최근 소식</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-5">
+                            <div class="fs-1 mb-3 opacity-50">📰</div>
+                            <h6 class="fw-bold mb-2">곧 다양한 소식을 만나보세요</h6>
+                            <p class="text-muted">게시판 기능이 완성되면 최신 게시글과 인기 글을 여기서 확인할 수 있습니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Developer Tools (for logged-in users only) -->
+        <div th:if="${isLoggedIn}" class="row">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header" style="background: var(--warning-gradient);">
+                        <h6 class="mb-0 text-white">개발 테스트 도구</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">보안 및 기능 테스트를 위한 개발 도구입니다</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/test/simple?input=%3Cscript%3Ealert('XSS')%3C/script%3E" 
+                               class="btn btn-outline-warning btn-sm" target="_blank">
+                               XSS 필터 테스트
+                            </a>
+                            <a href="/test/batch" class="btn btn-outline-info btn-sm" target="_blank">
+                                배치 XSS 테스트
+                            </a>
+                            <a href="/test/status" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                필터 상태 확인
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats for Development -->
+        <div th:if="${isLoggedIn}" class="row mt-4">
+            <div class="col-12">
+                <div class="glass p-4 rounded-3">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="fw-bold fs-4" style="background: var(--success-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">✅</div>
+                            <small class="text-muted">Lucy XSS Filter</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="fw-bold fs-4" style="background: var(--success-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🔐</div>
+                            <small class="text-muted">Spring Security</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="fw-bold fs-4" style="background: var(--success-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🛡️</div>
+                            <small class="text-muted">CSRF 보호</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="fw-bold fs-4" style="background: var(--warning-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🚧</div>
+                            <small class="text-muted">게시판 개발중</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script">
+        <script>
+        // 페이지 로드 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card, .stats-card, .glass');
+            
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // 개발 중 메시지
+        function showComingSoon(feature) {
+            alert(`${feature} 기능은 현재 개발 중입니다. 곧 만나보실 수 있습니다!`);
+        }
+        </script>
+    </th:block>
+</body>
+</html>

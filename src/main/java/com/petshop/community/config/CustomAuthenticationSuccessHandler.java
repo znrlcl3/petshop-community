@@ -21,6 +21,15 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         // 이전에 접근하려던 페이지가 있으면 그곳으로 리다이렉트
         SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
         if (savedRequest != null) {
+        	
+        	String redirectUrl = savedRequest.getRedirectUrl();
+            if (redirectUrl.contains(".well-known") || 
+                redirectUrl.contains("/error") || 
+                redirectUrl.contains("favicon.ico")) {
+                response.sendRedirect("/");
+                return;
+            }
+            
             response.sendRedirect(savedRequest.getRedirectUrl());
             return;
         }

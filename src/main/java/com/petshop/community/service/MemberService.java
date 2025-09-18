@@ -26,27 +26,19 @@ public class MemberService {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
 
-        // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(signupDto.password());
-
-        // MemberDto 생성 (Record 생성자 사용)
-        MemberDto member = new MemberDto(
-            null, // id는 auto increment
-            signupDto.username(),
-            encodedPassword,
-            signupDto.email(),
-            signupDto.nickname(),
-            signupDto.phone(),
-            null, // profileImage
-            "USER", // role
-            "ACTIVE", // status
-            false, // verified
-            null, // verifiedAt
-            null, // verifiedBy
-            null, // lastLoginAt
-            null, // createdAt (DB에서 자동 설정)
-            null  // updatedAt (DB에서 자동 설정)
-        );
+        MemberDto member = new MemberDto();
+        member.setUsername(signupDto.username());
+        member.setPassword(passwordEncoder.encode(signupDto.password()));
+        member.setEmail(signupDto.email());
+        member.setNickname(signupDto.nickname());
+        member.setPhone(signupDto.phone());
+        member.setRole("USER");
+        member.setStatus("ACTIVE");
+        member.setVerified(false);
+        member.setLoginCount(0);
+        member.setPostCount(0);
+        member.setCommentCount(0);
+        member.setDeleted(false);
 
         memberMapper.insertMember(member);
     }

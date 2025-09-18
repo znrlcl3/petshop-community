@@ -55,7 +55,7 @@
 
     <!-- 회원 가입 -->
     <insert id="insertMember" parameterType="com.petshop.community.dto.MemberDto"
-            useGeneratedKeys="true" keyProperty="id">
+            useGeneratedKeys="true">
         INSERT INTO members (
             username, password, email, nickname, phone, profile_image, role, status
         ) VALUES (
