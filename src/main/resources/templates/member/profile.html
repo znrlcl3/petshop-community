@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>내 프로필 - 펫샵 커뮤니티</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>내 프로필</h1>
+            <button class="btn btn-primary" onclick="alert('프로필 수정 기능은 개발 예정입니다.')">프로필 수정</button>
+        </div>
+
+        <div class="row">
+            <!-- 기본 정보 카드 -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>기본 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-4"><strong>사용자명:</strong></div>
+                            <div class="col-8" sec:authentication="name"></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4"><strong>권한:</strong></div>
+                            <div class="col-8">
+                                <span th:each="authority : ${authorities}" 
+                                      class="badge me-1"
+                                      th:classappend="${authority.authority.contains('ADMIN')} ? 'bg-danger' : 
+                                                     (${authority.authority.contains('VERIFIED')} ? 'bg-success' : 'bg-primary')"
+                                      th:text="${authority.authority}"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4"><strong>이메일:</strong></div>
+                            <div class="col-8 text-muted">프로필 수정에서 확인 가능</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-4"><strong>가입일:</strong></div>
+                            <div class="col-8 text-muted">데이터베이스에서 조회 필요</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 활동 통계 카드 -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>활동 통계</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <h4 class="text-primary">0</h4>
+                                    <small class="text-muted">작성한 게시글</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <h4 class="text-success">0</h4>
+                                    <small class="text-muted">작성한 댓글</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <h4 class="text-info">0</h4>
+                                    <small class="text-muted">받은 좋아요</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center">
+                                    <h4 class="text-warning">새내기</h4>
+                                    <small class="text-muted">활동 등급</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 인증 상태 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>인증 상태</h5>
+                    </div>
+                    <div class="card-body">
+                        <div sec:authorize="hasRole('VERIFIED')">
+                            <div class="alert alert-success">
+                                <h6 class="alert-heading">인증된 회원입니다!</h6>
+                                <p class="mb-0">
+                                    <span sec:authorize="hasRole('EXPERT')" class="badge bg-primary">전문가 인증</span>
+                                    <span sec:authorize="hasRole('BUSINESS')" class="badge bg-warning">사업자 인증</span>
+                                    <span sec:authorize="hasRole('INFLUENCER')" class="badge bg-info">인플루언서 인증</span>
+                                    <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger">관리자</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div sec:authorize="!hasRole('VERIFIED')">
+                            <div class="alert alert-light">
+                                <h6 class="alert-heading">일반 회원</h6>
+                                <p class="mb-0">전문가 인증을 신청하여 신뢰도를 높여보세요.</p>
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="alert('인증 신청 기능은 개발 예정입니다.')">인증 신청하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 내 활동 메뉴 -->
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">내 게시글</h5>
+                        <p class="card-text">작성한 게시글을 확인하고 관리합니다.</p>
+                        <button class="btn btn-outline-primary" onclick="alert('내 게시글 기능은 개발 예정입니다.')">게시글 보기</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">내 댓글</h5>
+                        <p class="card-text">작성한 댓글을 확인하고 관리합니다.</p>
+                        <button class="btn btn-outline-success" onclick="alert('내 댓글 기능은 개발 예정입니다.')">댓글 보기</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">좋아요 한 글</h5>
+                        <p class="card-text">좋아요를 누른 게시글을 확인합니다.</p>
+                        <button class="btn btn-outline-info" onclick="alert('좋아요 목록 기능은 개발 예정입니다.')">목록 보기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 계정 설정 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>계정 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>개인정보 관리</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-secondary" onclick="alert('개인정보 수정 기능은 개발 예정입니다.')">개인정보 수정</button>
+                                    <button class="btn btn-outline-warning" onclick="alert('비밀번호 변경 기능은 개발 예정입니다.')">비밀번호 변경</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>알림 설정</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-info" onclick="alert('알림 설정 기능은 개발 예정입니다.')">알림 설정</button>
+                                    <button class="btn btn-outline-danger" onclick="confirmWithdraw()">회원 탈퇴</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script">
+        <script>
+        function confirmWithdraw() {
+            if (confirm('정말로 회원 탈퇴를 하시겠습니까?\n탈퇴 후 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+                alert('회원 탈퇴 기능은 개발 예정입니다.');
+            }
+        }
+        </script>
+    </th:block>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>관리자 대시보드 - 펫샵 커뮤니티</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-danger">관리자 대시보드</h1>
+            <div class="text-muted">
+                관리자: <span sec:authentication="name"></span>
+            </div>
+        </div>
+
+        <!-- 통계 카드들 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">총 회원수</h5>
+                        <h2 class="mb-0">3명</h2>
+                        <small>관리자 1명, 일반회원 2명</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">인증회원</h5>
+                        <h2 class="mb-0">2명</h2>
+                        <small>전문가 1명, 관리자 1명</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">총 게시글</h5>
+                        <h2 class="mb-0">0개</h2>
+                        <small>게시판 기능 개발 예정</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">신고 처리</h5>
+                        <h2 class="mb-0">0건</h2>
+                        <small>처리 대기 중인 신고</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 관리 메뉴 -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>회원 관리</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">회원 정보 조회, 권한 변경, 계정 관리</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="alert('회원 관리 기능은 개발 예정입니다.')">회원 목록 보기</button>
+                            <button class="btn btn-outline-success" onclick="alert('인증 관리 기능은 개발 예정입니다.')">회원 인증 관리</button>
+                            <button class="btn btn-outline-warning" onclick="alert('정지 관리 기능은 개발 예정입니다.')">계정 정지 관리</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>콘텐츠 관리</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">게시글, 댓글, 신고 내용 관리</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="alert('게시글 관리 기능은 개발 예정입니다.')">게시글 관리</button>
+                            <button class="btn btn-outline-info" onclick="alert('댓글 관리 기능은 개발 예정입니다.')">댓글 관리</button>
+                            <button class="btn btn-outline-danger" onclick="alert('신고 처리 기능은 개발 예정입니다.')">신고 처리</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시스템 상태 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>시스템 상태</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>보안 시스템</h6>
+                                <ul class="list-unstyled">
+                                    <li><span class="badge bg-success">정상</span> Lucy XSS Filter</li>
+                                    <li><span class="badge bg-success">정상</span> Spring Security</li>
+                                    <li><span class="badge bg-success">정상</span> CSRF 보호</li>
+                                    <li><span class="badge bg-success">정상</span> 세션 관리</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>데이터베이스</h6>
+                                <ul class="list-unstyled">
+                                    <li><span class="badge bg-success">연결됨</span> MySQL 8.0</li>
+                                    <li><span class="badge bg-success">정상</span> 회원 테이블</li>
+                                    <li><span class="badge bg-warning">준비중</span> 게시판 테이블</li>
+                                    <li><span class="badge bg-warning">준비중</span> 펫샵 테이블</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>개발 도구</h6>
+                                <ul class="list-unstyled">
+                                    <li><a href="/test/simple?input=%3Cscript%3Ealert('test')%3C/script%3E" target="_blank" class="text-decoration-none">XSS 테스트</a></li>
+                                    <li><a href="/test/status" target="_blank" class="text-decoration-none">필터 상태</a></li>
+                                    <li><a href="/test/batch" target="_blank" class="text-decoration-none">배치 테스트</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 활동 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>최근 활동</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <p class="mb-0">최근 활동 로그 기능은 개발 예정입니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
