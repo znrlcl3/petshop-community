@@ -12,12 +12,8 @@
                 <h1 class="display-3 fw-bold mb-4">펫샵 커뮤니티</h1>
                 <p class="lead mb-4">반려동물과 함께하는 행복한 일상을 공유하세요</p>
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a class="btn btn-primary btn-lg hover-lift" th:href="@{/login}">
-                        로그인하기
-                    </a>
-                    <a class="btn btn-success btn-lg hover-lift" th:href="@{/signup}">
-                        회원가입
-                    </a>
+                    <a class="btn btn-primary btn-lg hover-lift" th:href="@{/login}">로그인하기</a>
+                    <a class="btn btn-success btn-lg hover-lift" th:href="@{/signup}">회원가입</a>
                 </div>
             </div>
         </div>
@@ -27,10 +23,8 @@
             <h2 class="fw-bold mb-3">안녕하세요, <span th:text="${username}" class="text-primary"></span>님!</h2>
             <p class="mb-3">오늘도 즐거운 하루 되세요</p>
             <div class="d-flex justify-content-center flex-wrap gap-2">
-                <span th:each="authority : ${authorities}" 
-                      class="badge fs-6 px-3 py-2"
-                      th:classappend="${authority.authority.contains('ADMIN')} ? 'bg-danger' : 
-                                     (${authority.authority.contains('VERIFIED')} ? 'bg-success' : 'bg-primary')"
+                <span th:each="authority : ${authorities}" class="badge fs-6 px-3 py-2"
+                      th:classappend="${authority.authority.contains('ADMIN')} ? 'bg-danger' : (${authority.authority.contains('VERIFIED')} ? 'bg-success' : 'bg-primary')"
                       th:text="${authority.authority}">
                 </span>
             </div>

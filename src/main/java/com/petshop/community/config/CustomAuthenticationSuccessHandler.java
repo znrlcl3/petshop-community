@@ -23,12 +23,13 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         if (savedRequest != null) {
         	
         	String redirectUrl = savedRequest.getRedirectUrl();
-            if (redirectUrl.contains(".well-known") || 
-                redirectUrl.contains("/error") || 
-                redirectUrl.contains("favicon.ico")) {
-                response.sendRedirect("/");
-                return;
-            }
+        	if (redirectUrl.contains("/login") ||
+    	        redirectUrl.contains(".well-known") || 
+    	        redirectUrl.contains("/error") || 
+    	        redirectUrl.contains("favicon.ico")) {
+    	        response.sendRedirect("/");
+    	        return;
+    	    }
             
             response.sendRedirect(savedRequest.getRedirectUrl());
             return;

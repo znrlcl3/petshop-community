@@ -54,7 +54,7 @@ public class SecurityConfig {
             // 인증이 필요한 URL 설정
             .authorizeHttpRequests(authz -> authz
                 // 정적 리소스 허용
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+        		.requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                 
                 // 공개 페이지 허용
                 .requestMatchers("/", "/home", "/login", "/signup").permitAll()
@@ -63,6 +63,8 @@ public class SecurityConfig {
                 
                 // XSS 테스트 페이지
                 .requestMatchers("/test/**").permitAll()
+                
+                .requestMatchers("/api/public/**").permitAll()
                 
                 // 중복 체크 API
                 .requestMatchers("/check/**").permitAll()

@@ -24,9 +24,9 @@ public class AuthController {
         
         // 이미 로그인된 사용자는 홈으로 리다이렉트
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
-            return "redirect:/";
-        }
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+    	    return "redirect:/";
+    	}
         
         if (error != null) {
             model.addAttribute("error", true);

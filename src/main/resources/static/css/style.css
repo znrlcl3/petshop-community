@@ -20,6 +20,9 @@ body {
 /* 네비게이션 바 스타일링 */
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	z-index: 1050;
+	background-color: white !important; /* 또는 원하는 색상 */
+    backdrop-filter: blur(10px); /* 선택사항: 블러 효과 */
 }
 
 .navbar-brand {
@@ -333,3 +336,4 @@ footer {
     background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
     border-color: #dc3545;
 }
+
