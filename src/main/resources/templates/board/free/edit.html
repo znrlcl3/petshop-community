@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - ' + ${categoryName}">게시글 수정 - 자유게시판</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head> -->
+	<div layout:fragment="content">
+	    <div class="container mt-4">
+	        <!-- 브레드크럼 -->
+	        <nav aria-label="breadcrumb" class="mb-3">
+	            <ol class="breadcrumb">
+	                <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+	                <li class="breadcrumb-item"><a th:href="@{'/board/' + ${categoryPath} + '/list'}" th:text="${categoryName}">자유게시판</a></li>
+	                <li class="breadcrumb-item"><a th:href="@{'/board/' + ${categoryPath} + '/view/' + ${post.id}}" th:text="${post.title}">게시글</a></li>
+	                <li class="breadcrumb-item active" aria-current="page">수정</li>
+	            </ol>
+	        </nav>
+	
+	        <!-- 수정 폼 -->
+	        <div class="card">
+	            <div class="card-header d-flex justify-content-between align-items-center">
+	                <h4 class="mb-0">
+	                    <i class="fas fa-edit me-2 text-primary"></i>
+	                    게시글 수정
+	                </h4>
+	                <span class="badge bg-secondary" th:text="${categoryName}">자유게시판</span>
+	            </div>
+	            
+	            <div class="card-body">
+	                <form th:action="@{'/board/' + ${categoryPath} + '/edit/' + ${post.id}}" th:object="${postEditDto}" method="post">
+	                    
+	                    <!-- CSRF 토큰 -->
+	                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+	                    
+	                    <!-- 작성자 정보 표시 -->
+	                    <div class="row mb-3">
+	                        <div class="col-md-6">
+	                            <label class="form-label text-muted">작성자</label>
+	                            <div class="d-flex align-items-center">
+	                                <span th:text="${post.authorNickname}">작성자</span>
+	                                <i th:if="${post.authorVerified}" class="fas fa-check-circle text-success ms-2" title="인증회원"></i>
+	                            </div>
+	                        </div>
+	                        <div class="col-md-6">
+	                            <label class="form-label text-muted">작성일</label>
+	                            <div th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</div>
+	                        </div>
+	                    </div>
+	
+	                    <!-- 제목 입력 -->
+	                    <div class="mb-4">
+	                        <label for="title" class="form-label">제목 <span class="text-danger">*</span></label>
+	                        <input type="text" class="form-control" id="title" name="title"th:value="${post.title}"
+	                               th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''" placeholder="제목을 입력하세요 (2~200자)" maxlength="200" required>
+	                        <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+	                        <div class="form-text">
+	                            <span id="titleCount">0</span>/200자
+	                        </div>
+	                    </div>
+	
+	                    <!-- 내용 입력 -->
+	                    <div class="mb-4">
+	                        <label for="content" class="form-label">내용 <span class="text-danger">*</span></label>
+	                        <textarea class="form-control" id="content" name="content" rows="15" th:classappend="${#fields.hasErrors('content')} ? 'is-invalid' : ''"
+	                                  placeholder="내용을 입력하세요 (10~10000자)" maxlength="10000" required th:text="${post.content}"></textarea>
+	                        <div class="invalid-feedback" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+	                        <div class="form-text d-flex justify-content-between">
+	                            <span>
+	                                <span id="contentCount">0</span>/10,000자
+	                            </span>
+	                            <span class="text-muted">
+	                                <i class="fas fa-info-circle me-1"></i>
+	                                HTML 태그 사용 가능
+	                            </span>
+	                        </div>
+	                    </div>
+	
+	                    <!-- 첨부파일 영역 (추후 구현) -->
+	                    <div class="mb-4">
+	                        <label class="form-label">첨부파일</label>
+	                        <div class="border rounded p-3 bg-light">
+	                            <div class="text-center text-muted py-2">
+	                                <i class="fas fa-paperclip fa-2x mb-2 d-block"></i>
+	                                <p class="mb-0">첨부파일 기능은 곧 추가될 예정입니다.</p>
+	                            </div>
+	                        </div>
+	                    </div>
+	
+	                    <!-- 수정 이유 (선택사항) -->
+	                    <div class="mb-4">
+	                        <label for="editReason" class="form-label">수정 사유 (선택사항)</label>
+	                        <input type="text" class="form-control" id="editReason" name="editReason" placeholder="수정 사유를 간단히 입력하세요" maxlength="100">
+	                        <div class="form-text">수정 사유는 다른 사용자에게 표시됩니다.</div>
+	                    </div>
+	
+	                    <!-- 전역 에러 메시지 -->
+	                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger mb-4">
+	                        <i class="fas fa-exclamation-triangle me-2"></i>
+	                        <div th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
+	                    </div>
+	
+	                    <!-- 버튼 그룹 -->
+	                    <div class="d-flex justify-content-between align-items-center">
+	                        <div>
+	                            <a th:href="@{'/board/' + ${categoryPath} + '/view/' + ${post.id}}" class="btn btn-secondary">
+	                                <i class="fas fa-arrow-left me-1"></i>
+	                                취소
+	                            </a>
+	                        </div>
+	                        <div>
+	                            <button type="button" class="btn btn-outline-primary me-2" onclick="previewPost()">
+	                                <i class="fas fa-eye me-1"></i>
+	                                미리보기
+	                            </button>
+	                            <button type="submit" class="btn btn-primary" onclick="return confirmUpdate()">
+	                                <i class="fas fa-save me-1"></i>
+	                                수정 완료
+	                            </button>
+	                        </div>
+	                    </div>
+	                </form>
+	            </div>
+	        </div>
+	
+	        <!-- 미리보기 모달 -->
+	        <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+	            <div class="modal-dialog modal-lg">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title">
+	                            <i class="fas fa-eye me-2"></i>
+	                            미리보기
+	                        </h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <div class="border-bottom pb-3 mb-3">
+	                            <h4 id="previewTitle">제목이 여기에 표시됩니다</h4>
+	                            <div class="text-muted small">
+	                                <span th:text="${post.authorNickname}">작성자</span>
+	                                <span class="ms-3">방금 전</span>
+	                            </div>
+	                        </div>
+	                        <div id="previewContent" style="min-height: 200px; line-height: 1.8;">
+	                            내용이 여기에 표시됩니다.
+	                        </div>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+	                            닫기
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	
+	        <!-- 수정 확인 모달 -->
+	        <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+	            <div class="modal-dialog">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title">
+	                            <i class="fas fa-question-circle me-2 text-warning"></i>
+	                            수정 확인
+	                        </h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <p class="mb-0">게시글을 수정하시겠습니까?</p>
+	                        <small class="text-muted">수정된 내용은 즉시 반영됩니다.</small>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+	                        <button type="button" class="btn btn-primary" id="confirmUpdateBtn">
+	                            <i class="fas fa-save me-1"></i>
+	                            수정하기
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<th:block layout:fragment="script">
+	    <!-- 커스텀 스크립트 -->
+	    <script>
+	        // 글자 수 카운터
+	        function updateCharCount() {
+	            const titleInput = document.getElementById('title');
+	            const contentTextarea = document.getElementById('content');
+	            const titleCount = document.getElementById('titleCount');
+	            const contentCount = document.getElementById('contentCount');
+	            
+	            titleCount.textContent = titleInput.value.length;
+	            contentCount.textContent = contentTextarea.value.length;
+	            
+	            // 글자 수에 따른 색상 변경
+	            if (titleInput.value.length > 180) {
+	                titleCount.className = 'text-warning';
+	            } else if (titleInput.value.length > 190) {
+	                titleCount.className = 'text-danger';
+	            } else {
+	                titleCount.className = '';
+	            }
+	            
+	            if (contentTextarea.value.length > 9000) {
+	                contentCount.className = 'text-warning';
+	            } else if (contentTextarea.value.length > 9500) {
+	                contentCount.className = 'text-danger';
+	            } else { 
+	                contentCount.className = '';
+	            }
+	        }
+	
+	        // 미리보기 기능
+	        function previewPost() {
+	            const title = document.getElementById('title').value.trim();
+	            const content = document.getElementById('content').value.trim();
+	            
+	            if (!title || !content) {
+	                alert('제목과 내용을 입력해주세요.');
+	                return;
+	            }
+	            
+	            document.getElementById('previewTitle').textContent = title;
+	            document.getElementById('previewContent').innerHTML = content.replace(/\n/g, '<br>');
+	            
+	            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+	            modal.show();
+	        }
+	
+	        // 수정 확인
+	        function confirmUpdate() {
+	            const title = document.getElementById('title').value.trim();
+	            const content = document.getElementById('content').value.trim();
+	            
+	            if (!title || !content) {
+	                alert('제목과 내용을 입력해주세요.');
+	                return false;
+	            }
+	            
+	            if (title.length < 2 || title.length > 200) {
+	                alert('제목은 2자 이상 200자 이하로 입력해주세요.');
+	                return false;
+	            }
+	            
+	            if (content.length < 10 || content.length > 10000) {
+	                alert('내용은 10자 이상 10,000자 이하로 입력해주세요.');
+	                return false;
+	            }
+	            
+	            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+	            modal.show();
+	            return false; // 폼 제출을 막고 모달에서 확인 후 제출
+	        }
+	
+	        // 페이지 로드 시 실행
+	        document.addEventListener('DOMContentLoaded', function() {
+	            const titleInput = document.getElementById('title');
+	            const contentTextarea = document.getElementById('content');
+	            
+	            // 초기 글자 수 계산
+	            updateCharCount();
+	            
+	            // 입력 시 글자 수 업데이트
+	            titleInput.addEventListener('input', updateCharCount);
+	            contentTextarea.addEventListener('input', updateCharCount);
+	            
+	            // 확인 모달의 확인 버튼 클릭 시 실제 폼 제출
+	            document.getElementById('confirmUpdateBtn').addEventListener('click', function() {
+	                document.querySelector('form').submit();
+	            });
+	            
+	            // 페이지 나가기 전 확인
+	            let formChanged = false;
+	            const originalTitle = titleInput.value;
+	            const originalContent = contentTextarea.value;
+	            
+	            titleInput.addEventListener('input', function() {
+	                formChanged = (this.value !== originalTitle) || (contentTextarea.value !== originalContent);
+	            });
+	            
+	            contentTextarea.addEventListener('input', function() {
+	                formChanged = (titleInput.value !== originalTitle) || (this.value !== originalContent);
+	            });
+	            
+	            window.addEventListener('beforeunload', function(e) {
+	                if (formChanged) {
+	                    e.preventDefault();
+	                    e.returnValue = '';
+	                }
+	            });
+	            
+	            // 폼 제출 시에는 beforeunload 무시
+	            document.querySelector('form').addEventListener('submit', function() {
+	                formChanged = false;
+	            });
+	        });
+	
+	        // 자동 저장 (localStorage 사용)
+	        function autoSave() {
+	            const title = document.getElementById('title').value;
+	            const content = document.getElementById('content').value;
+	            const postId = '[[${post.id}]]';
+	            
+	            localStorage.setItem(`editPost_${postId}_title`, title);
+	            localStorage.setItem(`editPost_${postId}_content`, content);
+	            localStorage.setItem(`editPost_${postId}_timestamp`, new Date().getTime());
+	        }
+	
+	        // 자동 저장된 내용 복원
+	        function restoreAutoSave() {
+	        	const postId = '[[${post.id}]]';
+	            const savedTitle = localStorage.getItem(`editPost_${postId}_title`);
+	            const savedContent = localStorage.getItem(`editPost_${postId}_content`);
+	            const savedTime = localStorage.getItem(`editPost_${postId}_timestamp`);
+	            
+	            if (savedTitle && savedContent && savedTime) {
+	                const saveTime = new Date(parseInt(savedTime));
+	                const now = new Date();
+	                const diffMinutes = (now - saveTime) / (1000 * 60);
+	                
+	                // 30분 이내에 저장된 내용만 복원
+	                if (diffMinutes < 30) {
+	                    if (confirm(`${Math.round(diffMinutes)}분 전에 자동 저장된 내용이 있습니다. 복원하시겠습니까?`)) {
+	                        document.getElementById('title').value = savedTitle;
+	                        document.getElementById('content').value = savedContent;
+	                        updateCharCount();
+	                    }
+	                }
+	            }
+	        }
+	
+	        // 30초마다 자동 저장
+	        setInterval(autoSave, 30000);
+	        
+	        // 페이지 로드 시 자동 저장된 내용 확인
+	        document.addEventListener('DOMContentLoaded', restoreAutoSave);
+	    </script>
+	</th:block>
+</html>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.petshop.community.mapper.CodeMapper">
+
+    <!-- ResultMap 정의 -->
+    <resultMap id="CodeResultMap" type="com.petshop.community.dto.CodeDto">
+        <id property="id" column="id"/>
+        <result property="groupId" column="group_id"/>
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="extraValue1" column="extra_value1"/>
+        <result property="extraValue2" column="extra_value2"/>
+        <result property="extraValue3" column="extra_value3"/>
+        <result property="displayOrder" column="display_order"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="groupCode" column="group_code"/>
+        <result property="groupName" column="group_name"/>
+    </resultMap>
+
+    <!-- 그룹 코드로 활성화된 코드 목록 조회 -->
+    <select id="selectCodesByGroupCode" parameterType="String" resultMap="CodeResultMap">
+        SELECT 
+            c.id, c.group_id, c.code, c.name, c.description,
+            c.extra_value1, c.extra_value2, c.extra_value3, 
+            c.display_order, c.is_active, c.created_at, c.updated_at,
+            cg.group_code, cg.group_name
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+        ORDER BY c.display_order ASC, c.id ASC
+    </select>
+
+    <!-- 그룹 코드와 코드로 코드명 조회 -->
+    <select id="selectCodeName" resultType="String">
+        SELECT c.name
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.code = #{code} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+    <!-- 그룹 코드와 코드로 확장값1 조회 -->
+    <select id="selectCodeExtraValue1" resultType="String">
+        SELECT c.extra_value1
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.code = #{code} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+    <!-- 그룹 코드와 코드로 확장값2 조회 -->
+    <select id="selectCodeExtraValue2" resultType="String">
+        SELECT c.extra_value2
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.code = #{code} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+    <!-- 그룹 코드와 코드로 Code 상세 조회 -->
+    <select id="selectCode" resultMap="CodeResultMap">
+        SELECT 
+            c.id, c.group_id, c.code, c.name, c.description,
+            c.extra_value1, c.extra_value2, c.extra_value3, 
+            c.display_order, c.is_active, c.created_at, c.updated_at,
+            cg.group_code, cg.group_name
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.code = #{code} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+    <!-- 확장값1로 코드 조회 (역방향 조회) -->
+    <select id="selectCodeByExtraValue1" resultType="String">
+        SELECT c.code
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.extra_value1 = #{extraValue1} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+    <!-- 코드 존재 여부 확인 -->
+    <select id="existsCode" resultType="int">
+        SELECT COUNT(*)
+        FROM codes c
+        JOIN code_groups cg ON c.group_id = cg.id
+        WHERE cg.group_code = #{groupCode} 
+          AND c.code = #{code} 
+          AND c.is_active = true 
+          AND cg.is_active = true
+    </select>
+
+</mapper>

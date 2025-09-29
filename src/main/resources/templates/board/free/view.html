@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <!-- <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${post.title} + ' - ' + ${categoryName}">게시글 제목 - 자유게시판</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet"> -->
+    <title th:text="${title} + ' - ' + ${categoryName}">게시글 제목 - 자유게시판</title>
+</head>
+<body>
+	<div layout:fragment="content">
+	    <div class="container mt-4">
+	        <!-- 브레드크럼 -->
+	        <nav aria-label="breadcrumb" class="mb-3">
+	            <ol class="breadcrumb">
+	                <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+	                <!-- <li class="breadcrumb-item"><a th:href="@{'/board/free/list'}" th:text="${categoryName}">자유게시판</a></li> -->
+	                <li class="breadcrumb-item"><a th:href="@{'/board/' + ${categoryPath} + '/list'}" th:text="${categoryName}">자유게시판</a></li>
+	                <li class="breadcrumb-item active" aria-current="page">게시글 보기</li>
+	            </ol>
+	        </nav>
+	
+	        <!-- 게시글 상세 내용 -->
+	        <div class="card mb-4">
+	            <!-- 게시글 헤더 -->
+	            <div class="card-header">
+	                <div class="d-flex justify-content-between align-items-start">
+	                    <div class="flex-grow-1">
+	                        <h2 class="mb-2" th:text="${post.title}">게시글 제목</h2>
+	                        <div class="d-flex flex-wrap align-items-center text-muted small">
+	                            <span class="me-3">
+	                                <i class="fas fa-user me-1"></i>
+	                                <span th:text="${post.authorNickname}">작성자</span>
+	                                <i th:if="${post.authorVerified}" class="fas fa-check-circle text-success ms-1" title="인증회원"></i>
+	                            </span>
+	                            <span class="me-3">
+	                                <i class="fas fa-calendar me-1"></i>
+	                                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</span>
+	                            </span>
+	                            <span class="me-3">
+	                                <i class="fas fa-eye me-1"></i>
+	                                조회 <span th:text="${post.viewCount}">0</span>
+	                            </span>
+	                            <span class="me-3">
+	                                <i class="fas fa-heart me-1 text-danger"></i>
+	                                좋아요 <span th:text="${post.likeCount}">0</span>
+	                            </span>
+	                            <span>
+	                                <i class="fas fa-comment me-1 text-primary"></i>
+	                                댓글 <span th:text="${post.commentCount}">0</span>
+	                            </span>
+	                        </div>
+	                    </div>
+	                    <div class="d-flex gap-1">
+	                        <span th:if="${post.isNotice}" class="badge bg-danger">공지</span>
+	                        <span th:if="${post.isTop}" class="badge bg-primary">TOP</span>
+	                        <span th:if="${post.hasAttachments}" class="badge bg-secondary">
+	                            <i class="fas fa-paperclip"></i> 첨부
+	                        </span>
+	                    </div>
+	                </div>
+	            </div>
+	
+	            <!-- 게시글 내용 -->
+	            <div class="card-body">
+	                <div class="post-content" th:utext="${post.content}" style="min-height: 200px; line-height: 1.8;">
+	                    게시글 내용이 여기에 표시됩니다.
+	                </div>
+	
+	                <!-- 첨부파일 영역 (추후 구현) -->
+	                <div th:if="${post.hasAttachments}" class="mt-4 pt-3 border-top">
+	                    <h6 class="mb-3"><i class="fas fa-paperclip me-2"></i>첨부파일</h6>
+	                    <div class="alert alert-info">
+	                        <i class="fas fa-info-circle me-2"></i>
+	                        첨부파일 기능은 곧 추가될 예정입니다.
+	                    </div>
+	                </div>
+	            </div>
+	
+	            <!-- 게시글 액션 버튼들 -->
+	            <div class="card-footer bg-light">
+	                <div class="d-flex justify-content-between align-items-center">
+	                    <div>
+	                        <!-- 좋아요 버튼 -->
+	                        <button class="btn btn-outline-danger btn-sm me-2" id="likeBtn" onclick="toggleLike()" th:data-post-id="${post.id}">
+	                            <i class="fas fa-heart me-1"></i>
+	                            좋아요 (<span id="likeCount" th:text="${post.likeCount}">0</span>)
+	                        </button>
+	                        
+	                        <!-- 공유 버튼 -->
+	                        <button class="btn btn-outline-secondary btn-sm" onclick="sharePost()">
+	                            <i class="fas fa-share me-1"></i>공유
+	                        </button>
+	                    </div>
+	
+	                    <div sec:authorize="isAuthenticated()">
+	                        <!-- 작성자만 보이는 버튼들 -->
+	                        <div th:if="${#authentication.name == post.authorNickname or #authorization.expression('hasRole(''ADMIN'')')}">
+	                            <!-- <a th:href="@{'/board/free/edit/' + ${post.id}}" class="btn btn-outline-primary btn-sm me-2"> -->
+	                            <a th:href="@{'/board/' + ${categoryPath} + '/edit/' + ${post.id}}" class="btn btn-outline-primary btn-sm me-2">
+	                                <i class="fas fa-edit me-1"></i>수정
+	                            </a>
+	                            <button class="btn btn-outline-danger btn-sm" onclick="deletePost()" th:data-post-id="${post.id}">
+	                                <i class="fas fa-trash me-1"></i>삭제
+	                            </button>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	
+	        <!-- 댓글 섹션 -->
+	        <div class="card mb-4">
+	            <div class="card-header d-flex justify-content-between align-items-center">
+	                <h5 class="mb-0">
+	                    <i class="fas fa-comments me-2"></i>
+	                    댓글 <span class="badge bg-primary" th:text="${post.commentCount}">0</span>
+	                </h5>
+	                <button class="btn btn-primary btn-sm" onclick="toggleCommentForm()" sec:authorize="isAuthenticated()">
+	                    <i class="fas fa-plus me-1"></i>댓글 작성
+	                </button>
+	            </div>
+	            <div class="card-body">
+	                <!-- 댓글 작성 폼 (로그인 시에만) -->
+	                <div id="commentForm" class="mb-4" style="display: none;" sec:authorize="isAuthenticated()">
+	                    <form onsubmit="submitComment(event)">
+	                        <div class="mb-3">
+	                            <textarea class="form-control" rows="3" placeholder="댓글을 입력하세요..." 
+	                                      id="commentContent" required></textarea>
+	                        </div>
+	                        <div class="d-flex justify-content-end gap-2">
+	                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCommentForm()">
+	                                취소
+	                            </button>
+	                            <button type="submit" class="btn btn-primary btn-sm">
+	                                <i class="fas fa-paper-plane me-1"></i>댓글 등록
+	                            </button>
+	                        </div>
+	                    </form>
+	                </div>
+	
+	                <!-- 댓글 목록 -->
+	                <div id="commentList">
+	                    <!-- 댓글이 없을 때 -->
+	                    <div th:if="${post.commentCount == 0}" class="text-center py-4 text-muted">
+	                        <i class="fas fa-comment-slash fa-3x mb-3 d-block opacity-50"></i>
+	                        <p>첫 번째 댓글을 작성해보세요!</p>
+	                    </div>
+	
+	                    <!-- 댓글 기능 개발 예정 메시지 -->
+	                    <div th:if="${post.commentCount > 0}" class="alert alert-info">
+	                        <i class="fas fa-tools me-2"></i>
+	                        댓글 기능은 현재 개발 중입니다. 곧 만나보실 수 있습니다!
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	
+	        <!-- 네비게이션 버튼들 -->
+	        <div class="d-flex justify-content-between align-items-center mb-5">
+	            <div>
+	            	<a th:href="@{'/board/' + ${categoryPath} + '/list'}" class="btn btn-outline-secondary">
+	                <!-- <a th:href="@{'/board/free/list'}" class="btn btn-outline-secondary"> -->
+	                    <i class="fas fa-list me-1"></i>목록으로
+	                </a>
+	            </div>
+	            
+	            <div sec:authorize="isAuthenticated()">
+	            	<a th:href="@{'/board/' + ${categoryPath} + '/write'}" class="btn btn-primary">
+	                    <i class="fas fa-pen me-1"></i>새 글 작성
+	                </a>
+	            </div>
+	        </div>
+	
+	        <!-- 이전/다음 글 (추후 구현) -->
+	        <div class="row mb-4">
+	            <div class="col-12">
+	                <div class="card">
+	                    <div class="list-group list-group-flush">
+	                        <div class="list-group-item d-flex justify-content-between align-items-center">
+	                            <div>
+	                                <i class="fas fa-chevron-up me-2 text-muted"></i>
+	                                <strong>다음 글:</strong>
+	                                <span class="text-muted ms-2">다음 게시글이 없습니다.</span>
+	                            </div>
+	                        </div>
+	                        <div class="list-group-item d-flex justify-content-between align-items-center">
+	                            <div>
+	                                <i class="fas fa-chevron-down me-2 text-muted"></i>
+	                                <strong>이전 글:</strong>
+	                                <span class="text-muted ms-2">이전 게시글이 없습니다.</span>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+    <!-- 커스텀 스크립트 -->
+    <th:block layout:fragment="script">
+    <script>
+        // 댓글 폼 토글
+        function toggleCommentForm() {
+            const form = document.getElementById('commentForm');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                document.getElementById('commentContent').focus();
+            } else {
+                form.style.display = 'none';
+                document.getElementById('commentContent').value = '';
+            }
+        }
+
+        // 댓글 작성
+        function submitComment(event) {
+            event.preventDefault();
+            const content = document.getElementById('commentContent').value.trim();
+            
+            if (!content) {
+                alert('댓글 내용을 입력해주세요.');
+                return;
+            }
+
+            // 실제 구현 시에는 AJAX로 서버에 전송
+            alert('댓글 기능은 곧 구현될 예정입니다.');
+            
+            // 폼 초기화
+            document.getElementById('commentContent').value = '';
+            toggleCommentForm();
+        }
+
+        // 좋아요 토글
+        function toggleLike() {
+            const btn = document.getElementById('likeBtn');
+            const postId = btn.dataset.postId;
+            const likeCountSpan = document.getElementById('likeCount');
+            const currentCount = parseInt(likeCountSpan.textContent);
+            
+            // 실제 구현 시에는 AJAX로 서버에 전송
+            // 임시로 UI만 변경
+            if (btn.classList.contains('btn-outline-danger')) {
+                btn.classList.remove('btn-outline-danger');
+                btn.classList.add('btn-danger');
+                likeCountSpan.textContent = currentCount + 1;
+                
+                // 임시 알림
+                showToast('좋아요를 눌렀습니다!', 'success');
+            } else {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-outline-danger');
+                likeCountSpan.textContent = Math.max(0, currentCount - 1);
+                
+                showToast('좋아요를 취소했습니다.', 'info');
+            }
+        }
+
+        // 게시글 삭제
+        function deletePost() {
+            if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.')) {
+                const postId = event.target.dataset.postId || event.target.closest('button').dataset.postId;
+                
+                // 실제 구현 시에는 AJAX로 서버에 전송
+                alert('게시글 삭제 기능은 곧 구현될 예정입니다.');
+            }
+        }
+
+        // 게시글 공유
+        function sharePost() {
+            const url = window.location.href;
+            const title = document.title;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: url
+                }).then(() => {
+                    console.log('공유 성공');
+                }).catch((error) => {
+                    console.log('공유 실패:', error);
+                    fallbackShare(url);
+                });
+            } else {
+                fallbackShare(url);
+            }
+        }
+
+        // 공유 대체 방법 (URL 복사)
+        function fallbackShare(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('게시글 링크가 복사되었습니다!', 'success');
+            }).catch(() => {
+                prompt('이 링크를 복사하세요:', url);
+            });
+        }
+
+        // 토스트 메시지 표시
+        function showToast(message, type = 'info') {
+            // Bootstrap Toast 또는 간단한 알림 구현
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'info' ? 'alert-info' : 
+                              type === 'warning' ? 'alert-warning' : 'alert-danger';
+            
+            const toast = document.createElement('div');
+            toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // 자동으로 제거
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 게시글 내용의 링크에 target="_blank" 추가
+            const postContent = document.querySelector('.post-content');
+            if (postContent) {
+                const links = postContent.querySelectorAll('a');
+                links.forEach(link => {
+                    if (link.hostname !== window.location.hostname) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                    }
+                });
+            }
+        });
+    </script>
+    </th:block>
+</body>
+</html>
