@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org">
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>회원가입 - 펫샵 커뮤니티</title>
 </head>
@@ -12,45 +13,59 @@
                         <h3 class="card-title text-center mb-4">📝 회원가입</h3>
                         
                         <form th:action="@{/signup}" th:object="${signupDto}" method="post">
+                        	<div th:if="${#fields.hasGlobalErrors()}">
+							    <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+							</div>
                             <div class="mb-3">
                                 <label for="username" class="form-label">아이디 *</label>
-                                <input type="text" class="form-control" th:field="*{username}" 
-                                       th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''" 
-                                       placeholder="4자 이상 20자 이하, 영문+숫자">
+                                <input type="text" class="form-control" th:field="*{username}" th:classappend="${#fields.hasErrors('username')} ? 'is-invalid' : ''" placeholder="4자 이상 20자 이하, 영문+숫자">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="password" class="form-label">비밀번호 *</label>
-                                <input type="password" class="form-control" th:field="*{password}"
-                                       th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
-                                       placeholder="8자 이상, 대소문자+숫자+특수문자">
+                                <input type="password" class="form-control" th:field="*{password}" th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''" placeholder="8자 이상, 대소문자+숫자+특수문자">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="email" class="form-label">이메일 *</label>
-                                <input type="email" class="form-control" th:field="*{email}"
-                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
-                                       placeholder="example@domain.com">
+                                <input type="email" class="form-control" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" placeholder="example@domain.com">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="nickname" class="form-label">닉네임 *</label>
-                                <input type="text" class="form-control" th:field="*{nickname}"
-                                       th:classappend="${#fields.hasErrors('nickname')} ? 'is-invalid' : ''"
-                                       placeholder="2자 이상 10자 이하">
+                                <input type="text" class="form-control" th:field="*{nickname}" th:classappend="${#fields.hasErrors('nickname')} ? 'is-invalid' : ''" placeholder="2자 이상 10자 이하">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="phone" class="form-label">휴대폰번호</label>
-                                <input type="text" class="form-control" th:field="*{phone}"
-                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
-                                       placeholder="010-0000-0000">
+                                <input type="text" class="form-control" th:field="*{phone}" th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''" placeholder="010-0000-0000">
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
                             </div>
+                            
+                            <div class="mb-3">
+							    <label for="zipcode" class="form-label">우편번호 *</label>
+							    <div class="input-group">
+							        <input type="text" class="form-control" th:field="*{zipcode}"  th:classappend="${#fields.hasErrors('zipcode')} ? 'is-invalid' : ''" readonly>
+							        <button type="button" class="btn btn-outline-secondary" onclick="execDaumPostcode()">주소검색</button>
+							    </div>
+							    <div class="invalid-feedback" th:if="${#fields.hasErrors('zipcode')}" th:errors="*{zipcode}"></div>
+							</div>
+							
+							<div class="mb-3">
+							    <label for="address" class="form-label">주소 *</label>
+							    <input type="text" class="form-control" th:field="*{address}"  th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''" readonly>
+							    <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+							</div>
+							
+							<div class="mb-3">
+							    <label for="detailAddress" class="form-label">상세주소 *</label>
+							    <input type="text" class="form-control" th:field="*{detailAddress}" th:classappend="${#fields.hasErrors('detailAddress')} ? 'is-invalid' : ''">
+							    <div class="invalid-feedback" th:if="${#fields.hasErrors('detailAddress')}" th:errors="*{detailAddress}"></div>
+							</div>
                             
                             <div class="mb-3 form-check">
                                 <input type="checkbox" class="form-check-input" id="agree" required>
@@ -80,12 +95,29 @@
         <script>
         // 중복 체크 기능 (향후 구현)
         $('#username').blur(function() {
-            // AJAX 중복 체크
         });
         
         $('#email').blur(function() {
-            // AJAX 중복 체크
         });
+        
+        function execDaumPostcode(){
+        	new daum.Postcode({
+                oncomplete: function(data) {
+                    // 주소 조합
+                    var addr = ''; // 주소 변수
+                    if (data.userSelectedType === 'R') { // 도로명
+                        addr = data.roadAddress;
+                    } else { // 지번
+                        addr = data.jibunAddress;
+                    }
+                    
+                    // 값 세팅
+                    document.querySelector('[name="zipcode"]').value = data.zonecode;
+                    document.querySelector('[name="address"]').value = addr;
+                    document.querySelector('[name="detailAddress"]').focus();
+                }
+            }).open();
+        }
         </script>
     </th:block>
 </body>

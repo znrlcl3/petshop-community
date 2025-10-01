@@ -34,6 +34,9 @@ public class MemberDto {
     private String deleteReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String zipcode;
+    private String address;
+    private String detailAddress;
 
     public MemberDto() {}
 
@@ -109,7 +112,16 @@ public class MemberDto {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public boolean isAdmin() {
+    public String getZipcode() {return zipcode;}
+	public void setZipcode(String zipCode) {this.zipcode = zipCode;}
+
+	public String getAddress() {return address;}
+	public void setAddress(String address) {this.address = address;}
+
+	public String getDetailAddress() {return detailAddress;}
+	public void setDetailAddress(String detailAddress) {this.detailAddress = detailAddress;}
+
+	public boolean isAdmin() {
         return "ADMIN".equals(role);
     }
     

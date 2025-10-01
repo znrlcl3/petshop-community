@@ -26,5 +26,13 @@ public record SignupDto(
     String nickname,
     
     @Pattern(regexp = "^01[0-9]-\\d{4}-\\d{4}$", message = "휴대폰번호 형식이 올바르지 않습니다")
-    String phone
+    String phone,
+
+    @NotBlank(message = "우편번호는 필수입니다")
+    String zipcode,
+
+    @NotBlank(message = "주소는 필수입니다")
+    String address,
+    
+    String detailAddress
 ) {}

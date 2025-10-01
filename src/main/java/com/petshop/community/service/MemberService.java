@@ -17,11 +17,11 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     public void registerMember(SignupDto signupDto) {
-        // 중복 체크
-        if (memberMapper.existsByUsername(signupDto.username())) {
+    	
+    	if (memberMapper.existsByUsername(signupDto.username())) {
             throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
-        
+
         if (memberMapper.existsByEmail(signupDto.email())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
@@ -39,6 +39,9 @@ public class MemberService {
         member.setPostCount(0);
         member.setCommentCount(0);
         member.setDeleted(false);
+        member.setZipcode(signupDto.zipcode());
+        member.setAddress(signupDto.address());
+        member.setDetailAddress(signupDto.detailAddress());
 
         memberMapper.insertMember(member);
     }

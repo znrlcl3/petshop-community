@@ -1,17 +1,27 @@
 package com.petshop.community.controller;
 
-import com.petshop.community.dto.SignupDto;
-import com.petshop.community.service.MemberService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petshop.community.dto.SignupDto;
+import com.petshop.community.service.MemberService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
@@ -37,25 +47,35 @@ public class AuthController {
 
     @GetMapping("/signup")
     public String signupPage(Model model) {
-        model.addAttribute("signupDto", new SignupDto("", "", "", "", ""));
+        model.addAttribute("signupDto", new SignupDto("", "", "", "", "","","",""));
         return "auth/signup";
     }
 
     @PostMapping("/signup")
-    public String signup(@Valid @ModelAttribute("signupDto") SignupDto signupDto,
-                        BindingResult bindingResult,
-                        RedirectAttributes redirectAttributes) {
+    public String signup(@Valid @ModelAttribute("signupDto") SignupDto signupDto,BindingResult bindingResult,RedirectAttributes redirectAttributes,Model model) {
         
         if (bindingResult.hasErrors()) {
             return "auth/signup";
         }
 
+        
         try {
             memberService.registerMember(signupDto);
             redirectAttributes.addFlashAttribute("message", "회원가입이 완료되었습니다. 로그인해주세요.");
             return "redirect:/login";
         } catch (IllegalArgumentException e) {
-            bindingResult.reject("signupFailed", e.getMessage());
+            if (e.getMessage().contains("아이디")) {
+                bindingResult.rejectValue("username", "duplicate", e.getMessage());
+            } else if (e.getMessage().contains("이메일")) {
+                bindingResult.rejectValue("email", "duplicate", e.getMessage());
+            } else {
+                bindingResult.reject("signupFailed", e.getMessage());
+            }
+            return "auth/signup";
+
+        } catch (Exception e) {
+        	log.error("회원가입 처리 중 예상치 못한 오류 - username: {}, error: {}", signupDto.username(), e.getMessage(), e);
+            bindingResult.reject("signupFailed", "회원가입 처리 중 오류가 발생했습니다.");
             return "auth/signup";
         }
     }

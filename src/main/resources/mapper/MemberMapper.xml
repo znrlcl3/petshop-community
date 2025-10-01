@@ -57,10 +57,10 @@
     <insert id="insertMember" parameterType="com.petshop.community.dto.MemberDto"
             useGeneratedKeys="true">
         INSERT INTO members (
-            username, password, email, nickname, phone, profile_image, role, status
+            username, password, email, nickname, phone, profile_image, role, status , zipcode , address , detail_address
         ) VALUES (
             #{username}, #{password}, #{email}, #{nickname}, #{phone}, 
-            #{profileImage}, #{role}, #{status}
+            #{profileImage}, #{role}, #{status} , #{zipcode} , #{address} , #{detailAddress}
         )
     </insert>
 
