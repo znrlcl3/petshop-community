@@ -1,18 +1,20 @@
 package com.petshop.community.service;
 
-import com.petshop.community.dto.MemberDto;
-import com.petshop.community.mapper.MemberMapper;
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import com.petshop.community.dto.MemberDto;
+import com.petshop.community.mapper.MemberMapper;
+import com.petshop.community.security.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -51,12 +53,18 @@ public class CustomUserDetailsService implements UserDetailsService {
             }
         }
         
-        return User.builder()
-                .username(member.getUsername())
-                .password(member.getPassword())
-                .disabled(!member.isActive())
-                .accountLocked(member.isSuspended())
-                .authorities(authorities)
-                .build();
+        return new CustomUserDetails(
+                member.getUsername(),
+                member.getPassword(),
+                member.isActive(),              // enabled
+                true,                           // accountNonExpired
+                true,                           // credentialsNonExpired
+                !member.isSuspended(),          // accountNonLocked
+                authorities,
+                member.getId(),                 // memberId
+                member.getNickname(),           // nickname
+                member.isVerified(),            // verified
+                member.getVerificationType()    // verificationType
+            );
     }
 }

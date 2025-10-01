@@ -1,19 +1,22 @@
 package com.petshop.community.service;
 
-import com.petshop.community.dto.PostDto;
-import com.petshop.community.dto.PostSearchRequest;
-import com.petshop.community.mapper.PostMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
-import java.util.List;
+import com.petshop.community.dto.PostCreateDto;
+import com.petshop.community.dto.PostDto;
+import com.petshop.community.dto.PostEditDto;
+import com.petshop.community.dto.PostSearchRequest;
+import com.petshop.community.mapper.PostMapper;
+import com.petshop.community.security.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -55,20 +58,56 @@ public class PostService {
     }
     
     @Transactional
-    public void updatePost(PostDto post, String updatedBy) {
-        if (post.getId() == null) {
-            throw new IllegalArgumentException("게시글 ID가 필요합니다.");
-        }
+    public Long createPost(PostCreateDto dto, String categoryCode, CustomUserDetails user, String clientIp) {
         
-        // 기존 게시글 존재 여부 확인
-        PostDto existingPost = postMapper.selectPostById(post.getId());
+        // DTO -> Entity 변환
+        PostDto post = new PostDto();
+        post.setCategoryCode(categoryCode);
+        post.setTitle(dto.getTitle().trim());
+        post.setContent(dto.getContent().trim());
+        post.setStatusCode("PST001"); // 정상
+        post.setMemberId(user.getMemberId());
+        post.setAuthorNickname(user.getNickname());
+        post.setAuthorVerified(user.isVerified());
+        post.setWriterIp(clientIp);
+        
+        // 게시글 등록
+        postMapper.insertPost(post);
+        
+        return post.getId();
+    }
+    
+    @Transactional
+    public void updatePost(Long postId, PostEditDto dto, CustomUserDetails user, String clientIp) {
+        
+        // 기존 게시글 조회
+        PostDto existingPost = postMapper.selectPostById(postId);
+        
         if (existingPost == null || existingPost.isDeleted()) {
             throw new IllegalArgumentException("존재하지 않는 게시글입니다.");
         }
         
-        log.info("게시글 업데이트 - ID: {}, updatedBy: {}", post.getId(), updatedBy);
+        // 권한 검증
+        boolean isAdmin = user.getAuthorities().stream()
+                .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
         
-        int result = postMapper.updatePost(post);
+        if (!existingPost.getAuthorNickname().equals(user.getNickname()) && !isAdmin) {
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+        
+        // 변경 여부 확인
+        if (existingPost.getTitle().equals(dto.getTitle()) && 
+            existingPost.getContent().equals(dto.getContent())) {
+            throw new IllegalArgumentException("변경된 내용이 없습니다.");
+        }
+        
+        // 업데이트
+        PostDto updatePost = new PostDto();
+        updatePost.setId(postId);
+        updatePost.setTitle(dto.getTitle().trim());
+        updatePost.setContent(dto.getContent().trim());
+        
+        int result = postMapper.updatePost(updatePost);
         if (result != 1) {
             throw new RuntimeException("게시글 수정에 실패했습니다.");
         }

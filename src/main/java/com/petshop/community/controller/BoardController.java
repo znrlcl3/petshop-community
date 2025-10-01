@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petshop.community.dto.PostCreateDto;
 import com.petshop.community.dto.PostDto;
 import com.petshop.community.dto.PostEditDto;
 import com.petshop.community.dto.PostSearchRequest;
+import com.petshop.community.security.CustomUserDetails;
 import com.petshop.community.service.CodeService;
 import com.petshop.community.service.CodeService.CategoryInfo;
 import com.petshop.community.service.PostService;
@@ -124,11 +126,97 @@ public class BoardController {
     }
     
     /**
+     * 게시글 등록 폼 페이지
+     */
+    @GetMapping("/{categoryPath}/write")
+    public String createPostForm(@PathVariable String categoryPath,HttpServletRequest request,Model model,Authentication authentication) {
+        
+        Map<String, CategoryInfo> categoryMap = codeService.getCategoryPathMap("BOARD_CATEGORY");
+        CategoryInfo categoryInfo = categoryMap.get(categoryPath);
+        
+        if (categoryInfo == null) {
+            return "redirect:/board";
+        }
+        
+        log.info("게시글 쓰기 폼 조회 - categoryPath={}", categoryPath);
+        
+        log.info("게시글 작성 폼 조회 - categoryPath={}, user={}", 
+                categoryPath, authentication.getName());
+        
+        // 빈 DTO 객체 생성 (유효성 검증용)
+        model.addAttribute("postCreateDto", new PostCreateDto());
+        model.addAttribute("categoryName", categoryInfo.getName());
+        model.addAttribute("categoryPath", categoryPath);
+        model.addAttribute("title", "새 글 작성");
+        
+        return "board/" + categoryPath + "/write";
+    }
+    
+    /**
+     * 게시글 등록 처리
+     */
+    @PostMapping("/{categoryPath}/write")
+    public String insertPost(@PathVariable String categoryPath,@Valid @ModelAttribute PostCreateDto postCreateDto,
+            				BindingResult bindingResult,HttpServletRequest request,Model model,Authentication authentication,RedirectAttributes redirectAttributes) {
+        
+    	CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+    	
+        Map<String, CategoryInfo> categoryMap = codeService.getCategoryPathMap("BOARD_CATEGORY");
+        CategoryInfo categoryInfo = categoryMap.get(categoryPath);
+        
+        if (categoryInfo == null) {
+            return "redirect:/board";
+        }
+        
+        log.info("게시글 등록 처리 시작 - categoryPath={}, user={}",categoryPath, authentication.getName());
+        
+    	// 유효성 검증 실패 시 폼으로 다시 이동
+        if (bindingResult.hasErrors()) {
+            log.warn("게시글 수정 유효성 검증 실패 - , errors: {}", bindingResult.getAllErrors());
+            
+            model.addAttribute("categoryName", categoryInfo.getName());
+            model.addAttribute("categoryPath", categoryPath);
+            model.addAttribute("title", "게시글 작성");
+            
+            return "board/" + categoryPath + "/write";
+        }
+        
+        try {
+        	Long postId = postService.createPost(postCreateDto, categoryInfo.getCode(),user,getClientIp(request));
+            
+            log.info("게시글 작성 완료 - postId: {}, user: {}", postId, authentication.getName());
+            
+            redirectAttributes.addFlashAttribute("message", "게시글이 성공적으로 등록되었습니다.");
+            return "redirect:/board/" + categoryPath + "/view/" + postId;
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("게시글 작성 실패 - user: {}, error: {}", authentication.getName(), e.getMessage());
+            bindingResult.reject("createFailed", e.getMessage());
+            
+            model.addAttribute("categoryName", categoryInfo.getName());
+            model.addAttribute("categoryPath", categoryPath);
+            model.addAttribute("title", "새 글 작성");
+            
+            return "board/" + categoryPath + "/write";
+            
+        } catch (Exception e) {
+            log.error("게시글 작성 처리 실패 - user: {}, error: {}", 
+                     authentication.getName(), e.getMessage(), e);
+            
+            redirectAttributes.addFlashAttribute("error", "게시글 작성 중 오류가 발생했습니다.");
+            return "redirect:/board/" + categoryPath + "/write";
+        }
+    }
+    
+    
+    /**
      * 게시글 수정 폼 페이지
      */
     @GetMapping("/{categoryPath}/edit/{postId}")
     public String editPostForm(@PathVariable String categoryPath,@PathVariable Long postId,HttpServletRequest request,Model model,Authentication authentication) {
         
+    	CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+    	
         Map<String, CategoryInfo> categoryMap = codeService.getCategoryPathMap("BOARD_CATEGORY");
         CategoryInfo categoryInfo = categoryMap.get(categoryPath);
         
@@ -154,11 +242,11 @@ public class BoardController {
             }
             
             // 권한 검증 (작성자 본인 또는 관리자만 수정 가능)
-            String currentUser = authentication.getName();
+            Long currentMemberId = user.getMemberId();
             boolean isAdmin = authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
             
-            if (!post.getAuthorNickname().equals(currentUser) && !isAdmin) {
-                log.warn("게시글 수정 권한 없음 - postId: {}, user: {}, author: {}", postId, currentUser, post.getAuthorNickname());
+            if (!post.getMemberId().equals(currentMemberId) && !isAdmin) {
+                log.warn("게시글 수정 권한 없음 - postId: {}, user: {}, author: {}", postId, currentMemberId, post.getAuthorNickname());
                 return "redirect:/board/" + categoryPath + "/view/" + postId + "?error=noPermission";
             }
             
@@ -193,73 +281,34 @@ public class BoardController {
             return "redirect:/board";
         }
         
-        log.info("게시글 수정 처리 시작 - categoryPath={}, postId={}, user={}",categoryPath, postId, authentication.getName());
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        
+        // 유효성 검증 실패 시 폼으로 다시 이동
+        if (bindingResult.hasErrors()) {
+            log.warn("게시글 수정 유효성 검증 실패 - postId: {}, errors: {}", postId, bindingResult.getAllErrors());
+            
+            model.addAttribute("categoryName", categoryInfo.getName());
+            model.addAttribute("categoryPath", categoryPath);
+            model.addAttribute("title", "게시글 수정");
+            return "board/" + categoryPath + "/edit";
+        }
         
         try {
-        	
-            PostDto post = postService.getPostDetail(postId, getClientIp(request));
-            
-            // 게시글이 존재하지 않거나 삭제된 경우
-            if (post == null || post.isDeleted()) {
-                log.warn("존재하지 않는 게시글 - ID: {}", postId);
-                return "redirect:/board/" + categoryPath + "/list?error=notFound";
-            }
-            
-            // 카테고리 검증
-            if (!categoryInfo.getCode().equals(post.getCategoryCode())) {
-                log.warn("카테고리 불일치 - URL: {}, 게시글: {}", categoryPath, post.getCategoryCode());
-                return "redirect:/board/" + categoryPath + "/list?error=invalidCategory";
-            }
-            
-            // 권한 검증 (작성자 본인 또는 관리자만 수정 가능)
-            String currentUser = authentication.getName();
-            boolean isAdmin = authentication.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-            
-            if (!post.getAuthorNickname().equals(currentUser) && !isAdmin) {
-                log.warn("게시글 수정 권한 없음 - postId: {}, user: {}, author: {}", postId, currentUser, post.getAuthorNickname());
-                return "redirect:/board/" + categoryPath + "/view/" + postId + "?error=noPermission";
-            }
-            
-        	// 유효성 검증 실패 시 폼으로 다시 이동
-            if (bindingResult.hasErrors()) {
-                log.warn("게시글 수정 유효성 검증 실패 - postId: {}, errors: {}", postId, bindingResult.getAllErrors());
-                
-                model.addAttribute("post", post);
-                model.addAttribute("categoryName", categoryInfo.getName());
-                model.addAttribute("categoryPath", categoryPath);
-                model.addAttribute("title", "게시글 수정");
-                
-                return "board/" + categoryPath + "/edit";
-            }
-            
-            // 내용 변경 여부 확인
-            if (post.getTitle().equals(postEditDto.getTitle()) && post.getContent().equals(postEditDto.getContent())) {
-            	
-                log.info("게시글 내용 변경 없음 - postId: {}", postId);
-                redirectAttributes.addFlashAttribute("message", "변경된 내용이 없습니다.");
-                return "redirect:/board/" + categoryPath + "/view/" + postId;
-            }
-            
-            // 게시글 업데이트
-            PostDto updatePost = new PostDto();
-            updatePost.setId(postId);
-            updatePost.setTitle(postEditDto.getTitle().trim());
-            updatePost.setContent(postEditDto.getContent().trim());
-            
-            postService.updatePost(updatePost, authentication.getName());
-            
-            log.info("게시글 수정 완료 - postId: {}, user: {}", postId, authentication.getName());
+            postService.updatePost(postId, postEditDto, user, getClientIp(request));
             
             redirectAttributes.addFlashAttribute("message", "게시글이 성공적으로 수정되었습니다.");
             return "redirect:/board/" + categoryPath + "/view/" + postId;
             
         } catch (IllegalArgumentException e) {
-            log.warn("게시글 수정 실패 - postId: {}, error: {}", postId, e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/board/" + categoryPath + "/edit/" + postId;
+            if ("변경된 내용이 없습니다.".equals(e.getMessage())) {
+                redirectAttributes.addFlashAttribute("message", e.getMessage());
+            } else {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+            }
+            return "redirect:/board/" + categoryPath + (e.getMessage().contains("권한") ? "/view/" : "/edit/") + postId;
             
         } catch (Exception e) {
-            log.error("게시글 수정 처리 실패 - postId: {}, error: {}", postId, e.getMessage(), e);
+            log.error("게시글 수정 실패 - postId: {}, error: {}", postId, e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "게시글 수정 중 오류가 발생했습니다.");
             return "redirect:/board/" + categoryPath + "/edit/" + postId;
         }
