@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -13,11 +14,19 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfig {
-
+	
+	private final UserDetailsService userDetailsService;
+	private final AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final AuthenticationFailureHandler authenticationFailureHandler;
+    
+	    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -46,7 +55,7 @@ public class SecurityConfig {
             
             // 세션 관리
             .sessionManagement(session -> session
-                .maximumSessions(1)
+                .maximumSessions(3)
                 .maxSessionsPreventsLogin(false)
                 .sessionRegistry(sessionRegistry())
             )
@@ -86,8 +95,8 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .usernameParameter("username")
                 .passwordParameter("password")
-                .successHandler(authenticationSuccessHandler())
-                .failureHandler(authenticationFailureHandler())
+                .successHandler(authenticationSuccessHandler)
+                .failureHandler(authenticationFailureHandler)
                 .permitAll()
             )
             
@@ -100,6 +109,12 @@ public class SecurityConfig {
                 .permitAll()
             )
             
+            .rememberMe(rememberMe -> rememberMe
+        	    .key("uniqueAndSecret") // 쿠키 서명에 사용할 키
+        	    .tokenValiditySeconds(86400 * 14) // 14일간 유효
+        	    .userDetailsService(userDetailsService) // UserDetailsService 구현체
+        	    .rememberMeParameter("remember-me")
+        	)
             // 접근 거부 처리
             .exceptionHandling(exceptions -> exceptions
                 .accessDeniedPage("/error/403")
@@ -113,13 +128,4 @@ public class SecurityConfig {
         return new org.springframework.security.core.session.SessionRegistryImpl();
     }
 
-    @Bean
-    public AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler();
-    }
-
-    @Bean
-    public AuthenticationFailureHandler authenticationFailureHandler() {
-        return new CustomAuthenticationFailureHandler();
-    }
 }
