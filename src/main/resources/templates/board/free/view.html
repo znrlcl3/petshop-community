@@ -2,13 +2,9 @@
 <html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
       xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <!-- <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${post.title} + ' - ' + ${categoryName}">게시글 제목 - 자유게시판</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link th:href="@{/css/style.css}" rel="stylesheet"> -->
     <title th:text="${title} + ' - ' + ${categoryName}">게시글 제목 - 자유게시판</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
 <body>
 	<div layout:fragment="content">
@@ -41,25 +37,17 @@
 	                                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</span>
 	                            </span>
 	                            <span class="me-3">
-	                                <i class="fas fa-eye me-1"></i>
-	                                조회 <span th:text="${post.viewCount}">0</span>
-	                            </span>
-	                            <span class="me-3">
-	                                <i class="fas fa-heart me-1 text-danger"></i>
-	                                좋아요 <span th:text="${post.likeCount}">0</span>
+	                                <i class="fas fa-eye me-1"></i>조회 <span th:text="${post.viewCount}">0</span>
 	                            </span>
 	                            <span>
-	                                <i class="fas fa-comment me-1 text-primary"></i>
-	                                댓글 <span th:text="${post.commentCount}">0</span>
+	                                <i class="fas fa-comment me-1 text-primary"></i>댓글 <span th:text="${post.commentCount}">0</span>
 	                            </span>
 	                        </div>
 	                    </div>
 	                    <div class="d-flex gap-1">
 	                        <span th:if="${post.isNotice}" class="badge bg-danger">공지</span>
 	                        <span th:if="${post.isTop}" class="badge bg-primary">TOP</span>
-	                        <span th:if="${post.hasAttachments}" class="badge bg-secondary">
-	                            <i class="fas fa-paperclip"></i> 첨부
-	                        </span>
+	                        <span th:if="${post.hasAttachments}" class="badge bg-secondary"><i class="fas fa-paperclip"></i> 첨부</span>
 	                    </div>
 	                </div>
 	            </div>
@@ -235,6 +223,7 @@
         }
 
         // 좋아요 토글
+        /*
         function toggleLike() {
             const btn = document.getElementById('likeBtn');
             const postId = btn.dataset.postId;
@@ -257,7 +246,7 @@
                 
                 showToast('좋아요를 취소했습니다.', 'info');
             }
-        }
+        }*/
 
         // 게시글 삭제
         function deletePost() {
@@ -297,6 +286,63 @@
                 prompt('이 링크를 복사하세요:', url);
             });
         }
+        
+        function toggleLike() {
+            const btn = document.getElementById('likeBtn');
+            const postId = btn.dataset.postId; // 여기서 postId 변수 가져옴
+            const likeCountSpan = document.getElementById('likeCount');
+
+            // CSRF 토큰 가져오기
+            const token = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
+            const header = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
+
+            if (!token || !header) {
+                console.error('CSRF token not found!');
+                showToast('오류가 발생했습니다. 페이지를 새로고침 해주세요.', 'danger');
+                return;
+            }
+            
+            fetch(`/board/api/posts/${postId}/like`, { // <<< 여기가 수정된 부분입니다!
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token
+                }
+            })
+            .then(response => {
+            	console.log(response);
+                if (response.status === 401) {
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/login';
+                    return Promise.reject('로그인 필요');
+                }
+                if (!response.ok) {
+                    console.error('API Error:', response.status, response.statusText);
+                    return response.json().then(err => Promise.reject(err.message || '서버 오류 발생'));
+                }
+                return response.json();
+            })
+            .then(data => {
+                likeCountSpan.textContent = data.newLikeCount;
+
+                if (data.userLiked) {
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                    showToast('좋아요를 눌렀습니다!', 'success');
+                } else {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                    showToast('좋아요를 취소했습니다.', 'info');
+                }
+            })
+            .catch(error => {
+            	console.log(error);
+                if (error !== '로그인 필요') {
+                     console.error('Fetch Error:', error);
+                     showToast(error.toString() || '오류가 발생했습니다. 다시 시도해주세요.', 'danger');
+                }
+            });
+        }
 
         // 토스트 메시지 표시
         function showToast(message, type = 'info') {
@@ -306,7 +352,7 @@
                               type === 'warning' ? 'alert-warning' : 'alert-danger';
             
             const toast = document.createElement('div');
-            toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            toast.className = 'alert ${alertClass} alert-dismissible fade show position-fixed';
             toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             toast.innerHTML = `
                 <span>${message}</span>

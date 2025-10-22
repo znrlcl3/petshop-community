@@ -188,4 +188,22 @@
         WHERE id = #{id}
     </update>
 
+	<update id="incrementLikeCount">
+	    UPDATE posts
+	    SET like_count = like_count + 1
+	    WHERE id = #{id}
+	</update>
+
+	<update id="decrementLikeCount">
+	    UPDATE posts
+	    SET like_count = like_count - 1
+	    WHERE id = #{id} AND like_count > 0
+	</update>
+	
+	<select id="getLikeCount" resultType="int">
+	    SELECT like_count
+	    FROM posts
+	    WHERE id = #{id}
+	</select>
+	
 </mapper>

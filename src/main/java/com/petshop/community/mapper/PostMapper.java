@@ -64,4 +64,18 @@ public interface PostMapper {
      * 댓글 수 감소
      */
     int decreaseCommentCount(@Param("id") Long id);
+    
+    /**
+     * 좋아요 증가
+     */
+    void incrementLikeCount(@Param("id") Long id);
+    /**
+     * 좋아요 감소
+     */
+    void decrementLikeCount(@Param("id") Long id);
+    /**
+     * 좋아요 조회
+     */
+    int getLikeCount(@Param("id") Long id);
+    
 }

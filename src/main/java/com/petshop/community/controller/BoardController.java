@@ -6,7 +6,9 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petshop.community.dto.LikeResponseDto;
 import com.petshop.community.dto.PostCreateDto;
 import com.petshop.community.dto.PostDto;
 import com.petshop.community.dto.PostEditDto;
@@ -24,6 +28,7 @@ import com.petshop.community.dto.PostSearchRequest;
 import com.petshop.community.security.CustomUserDetails;
 import com.petshop.community.service.CodeService;
 import com.petshop.community.service.CodeService.CategoryInfo;
+import com.petshop.community.service.PostLikeService;
 import com.petshop.community.service.PostService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,7 +44,8 @@ public class BoardController {
 
     private final PostService postService;
     private final CodeService codeService;
-
+    private final PostLikeService postLikeService;
+    
     /**
      * 
      * 
@@ -81,7 +87,7 @@ public class BoardController {
      * 
      */
     @GetMapping("/{categoryPath}/view/{postId}")
-    public String getPostDetail(@PathVariable String categoryPath,@PathVariable Long postId,HttpServletRequest request,Model model) {
+    public String getPostDetail(@PathVariable String categoryPath,@PathVariable Long postId,HttpServletRequest request,Model model,@AuthenticationPrincipal CustomUserDetails user) {
         
     	Map<String, CategoryInfo> categoryMap = codeService.getCategoryPathMap("BOARD_CATEGORY");
         CategoryInfo categoryInfo = categoryMap.get(categoryPath);
@@ -106,6 +112,13 @@ public class BoardController {
                 log.warn("카테고리 불일치 - URL: {}, 게시글: {}", categoryPath, post.getCategoryCode());
                 return "redirect:/board/" + categoryPath + "/list?error=invalidCategory";
             }
+            
+            // --- 좋아요 상태 로직 추가 ---
+            boolean userHasLiked = false;
+            if (user != null) {
+                userHasLiked = postLikeService.hasUserLikedPost(postId, user.getMemberId());
+            }
+            model.addAttribute("userHasLiked", userHasLiked); // view.html 로 전달
             
             log.info("게시글 상세 조회 성공 - postId={}, title={}", postId, post.getTitle());
 
@@ -312,6 +325,20 @@ public class BoardController {
             redirectAttributes.addFlashAttribute("error", "게시글 수정 중 오류가 발생했습니다.");
             return "redirect:/board/" + categoryPath + "/edit/" + postId;
         }
+    }
+    
+    @PostMapping("/api/posts/{postId}/like") // API 경로 지정
+    @ResponseBody // JSON 응답을 위해 추가
+    public ResponseEntity<LikeResponseDto> toggleLike(@PathVariable("postId") Long postId,@AuthenticationPrincipal CustomUserDetails user) { // @AuthenticationPrincipal 사용 추천
+
+        if (user == null) {
+            // 비로그인 사용자는 접근 불가 (401 Unauthorized)
+            return ResponseEntity.status(401).build();
+        }
+
+        Long memberId = user.getMemberId();
+        LikeResponseDto response = postLikeService.toggleLike(postId, memberId);
+        return ResponseEntity.ok(response);
     }
     
     /**
