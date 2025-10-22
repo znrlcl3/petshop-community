@@ -8,10 +8,50 @@
 		<version>3.5.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+	
+	<profiles>
+        <!-- 1. 로컬 개발용 프로필 (기본 활성화) -->
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault> <!-- 이 프로필을 기본으로 사용 -->
+            </activation>
+            <properties>
+                <!-- 로컬에서는 JAR 패키징처럼 동작하도록 함 -->
+                <packaging.type>jar</packaging.type>
+            </properties>
+            <dependencies>
+                <!-- 로컬에서는 내장 Tomcat을 사용 -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                    <!-- <scope> 은 여기서 지정하지 않음 (기본값 compile) -->
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <!-- 2. 서버 배포용 프로필 -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <!-- 서버 배포 시에는 WAR 패키징 사용 -->
+                <packaging.type>war</packaging.type>
+            </properties>
+            <dependencies>
+                <!-- 서버 배포 시에는 내장 Tomcat 제외 -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+    
 	<groupId>com.petshop</groupId>
 	<artifactId>community</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>${packaging.type}</packaging>
 	<name>petshop-community</name>
 	<description>펫 커뮤니티 플랫폼</description>
 	<url/>
@@ -76,11 +116,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -88,6 +123,8 @@
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter-test</artifactId>
 			<version>3.0.5</version>
+
+
 			<scope>test</scope>
 		</dependency>
 		<dependency>
