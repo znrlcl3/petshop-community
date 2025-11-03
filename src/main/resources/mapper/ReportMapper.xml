@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.petshop.community.mapper.ReportMapper">
+
+    <insert id="insertReport" parameterType="com.petshop.community.dto.ReportDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO reports (
+            reporter_id, 
+            target_type, 
+            target_id, 
+            report_reason_code, 
+            report_detail, 
+            status_code, 
+            created_at
+        ) VALUES (
+            #{reporterId}, 
+            #{targetType}, 
+            #{targetId}, 
+            #{reportReasonCode}, 
+            #{reportDetail}, 
+            #{statusCode}, 
+            NOW()
+        )
+    </insert>
+
+    <select id="existsByReporterAndTarget" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM reports
+        WHERE
+            reporter_id = #{reporterId}
+            AND target_type = #{targetType}
+            AND target_id = #{targetId}
+            AND status_code != 'RPT004' <!-- '반려'-->
+    </select>
+
+</mapper>
