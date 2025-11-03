@@ -7,12 +7,14 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -345,6 +347,37 @@ public class BoardController {
         Long memberId = user.getMemberId();
         LikeResponseDto response = postLikeService.toggleLike(postId, memberId);
         return ResponseEntity.ok(response);
+    }
+    
+    @DeleteMapping("/api/posts/{postId}")
+    @ResponseBody
+    public ResponseEntity<?> deletePostApi(
+            @PathVariable("postId") Long postId,
+            @AuthenticationPrincipal CustomUserDetails user) {
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        log.info("게시글 삭제 요청 - postId: {}, user: {}", postId, user.getUsername());
+
+        try {
+            postService.deletePost(postId, user);
+            
+            return ResponseEntity.ok().body("게시글이 성공적으로 삭제되었습니다.");
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("게시글 삭제 실패 - postId: {}, error: {}", postId, e.getMessage());
+            // 권한 없음(403) 또는 찾을 수 없음(404)
+            if (e.getMessage().contains("권한")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("게시글 삭제 중 시스템 오류 - postId: {}", postId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 삭제 중 오류가 발생했습니다.");
+        }
     }
     
     /**

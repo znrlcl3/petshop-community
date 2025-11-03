@@ -112,4 +112,40 @@ public class PostService {
             throw new RuntimeException("게시글 수정에 실패했습니다.");
         }
     }
+    
+    /**
+     * 게시글 삭제 처리 (소프트 delet)
+     * @param postId 삭제할 게시글 ID
+     * @param user 삭제를 요청한 사용자
+     */
+    @Transactional
+    public void deletePost(Long postId, CustomUserDetails user) {
+        
+        // 1. 게시글 조회
+        PostDto existingPost = postMapper.selectPostById(postId);
+        
+        if (existingPost == null || existingPost.isDeleted()) {
+            throw new IllegalArgumentException("존재하지 않거나 이미 삭제된 게시글입니다.");
+        }
+        
+        // 2. 권한 검증 (작성자 본인 또는 관리자)
+        boolean isAdmin = user.getAuthorities().stream().anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
+                
+        if (!existingPost.getMemberId().equals(user.getMemberId()) && !isAdmin) {
+            log.warn("게시글 삭제 권한 없음 - postId: {}, user: {}, authorId: {}", postId, user.getMemberId(), existingPost.getMemberId());
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
+        
+        // 3. 소프트 삭제 실행
+        int result = postMapper.deletePost(postId, user.getMemberId());
+        
+        if (result != 1) {
+            log.error("게시글 소프트 삭제 실패 - postId: {}", postId);
+            throw new RuntimeException("게시글 삭제에 실패했습니다.");
+        }
+        
+        log.info("게시글 소프트 삭제 완료 - postId: {}, deletedBy: {}", postId, user.getMemberId());
+        
+        // member테이블 post수를 줄여야하는가? 필요시 나중에 추가.
+    }
 }
