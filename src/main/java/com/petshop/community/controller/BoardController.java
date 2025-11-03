@@ -1,6 +1,7 @@
 package com.petshop.community.controller;
 
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.petshop.community.dto.CodeDto;
 import com.petshop.community.dto.LikeResponseDto;
 import com.petshop.community.dto.PostCreateDto;
 import com.petshop.community.dto.PostDto;
@@ -119,6 +121,10 @@ public class BoardController {
                 userHasLiked = postLikeService.hasUserLikedPost(postId, user.getMemberId());
             }
             model.addAttribute("userHasLiked", userHasLiked); // view.html 로 전달
+            
+            // --- 신고 사유 목록 추가 ---
+            List<CodeDto> reportReasons = codeService.getCodesByGroup("REPORT_REASON");
+            model.addAttribute("reportReasons", reportReasons);
             
             log.info("게시글 상세 조회 성공 - postId={}, title={}", postId, post.getTitle());
 

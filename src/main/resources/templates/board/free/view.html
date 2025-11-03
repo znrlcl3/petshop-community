@@ -82,6 +82,13 @@
 	                        <button class="btn btn-outline-secondary btn-sm" onclick="sharePost()">
 	                            <i class="fas fa-share me-1"></i>공유
 	                        </button>
+	                        
+	                        <!-- --- 신고 버튼 추가 --- -->
+                            <button class="btn btn-outline-warning btn-sm ms-2" sec:authorize="isAuthenticated()"th:onclick="openReportModal('POST', [[${post.id}]])">
+                                <i class="fas fa-flag me-1"></i>신고
+                            </button>
+                            <!-- ----------------------- -->
+                            
 	                    </div>
 	
 	                    <div sec:authorize="isAuthenticated()">
@@ -187,8 +194,50 @@
 	            </div>
 	        </div>
 	    </div>
-	</div>
+		<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="reportForm" onsubmit="submitReport(event)">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reportModalLabel"><i class="fas fa-flag text-warning me-2"></i>신고하기</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>신고 사유를 선택해주세요. 허위 신고 시 이용이 제한될 수 있습니다.</p>
+                        
+                        <!-- 신고 대상 정보 -->
+                        <input type="hidden" id="reportTargetType" name="targetType">
+                        <input type="hidden" id="reportTargetId" name="targetId">
 
+                        <!-- 신고 사유 -->
+                        <div class="list-group list-group-flush mb-3">
+                            <th:block th:each="reason : ${reportReasons}">
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-2" type="radio" name="reportReasonCode" th:id="'reason-' + ${reason.code}" th:value="${reason.code}" required>
+                                    <span th:text="${reason.name}">욕설/비방</span>
+                                    <small th:if="${reason.description != null}" class="d-block text-muted" th:text="${reason.description}">욕설, 비방, 차별, 혐오 발언</small>
+                                </label>
+                            </th:block>
+                        </div>
+
+                        <!-- 상세 내용 (기타 선택 시 활성화) -->
+                        <div class="mb-3">
+                            <label for="reportDetail" class="form-label">상세 내용 (선택)</label>
+                            <textarea class="form-control" id="reportDetail" name="reportDetail" rows="3" placeholder="기타 사유를 선택한 경우, 상세 내용을 입력해주세요. (1000자 이내)"></textarea>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="submit" class="btn btn-danger" id="reportSubmitBtn">
+                            <i class="fas fa-paper-plane me-1"></i>신고 접수
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+	</div>
     <!-- 커스텀 스크립트 -->
     <th:block layout:fragment="script">
     <script>
@@ -221,32 +270,6 @@
             document.getElementById('commentContent').value = '';
             toggleCommentForm();
         }
-
-        // 좋아요 토글
-        /*
-        function toggleLike() {
-            const btn = document.getElementById('likeBtn');
-            const postId = btn.dataset.postId;
-            const likeCountSpan = document.getElementById('likeCount');
-            const currentCount = parseInt(likeCountSpan.textContent);
-            
-            // 실제 구현 시에는 AJAX로 서버에 전송
-            // 임시로 UI만 변경
-            if (btn.classList.contains('btn-outline-danger')) {
-                btn.classList.remove('btn-outline-danger');
-                btn.classList.add('btn-danger');
-                likeCountSpan.textContent = currentCount + 1;
-                
-                // 임시 알림
-                showToast('좋아요를 눌렀습니다!', 'success');
-            } else {
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-outline-danger');
-                likeCountSpan.textContent = Math.max(0, currentCount - 1);
-                
-                showToast('좋아요를 취소했습니다.', 'info');
-            }
-        }*/
 
         // 게시글 삭제
         function deletePost() {
@@ -302,7 +325,7 @@
                 return;
             }
             
-            fetch(`/board/api/posts/${postId}/like`, { // <<< 여기가 수정된 부분입니다!
+            fetch(`/board/api/posts/${postId}/like`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -310,7 +333,6 @@
                 }
             })
             .then(response => {
-            	console.log(response);
                 if (response.status === 401) {
                     alert('로그인이 필요합니다.');
                     window.location.href = '/login';
@@ -352,7 +374,7 @@
                               type === 'warning' ? 'alert-warning' : 'alert-danger';
             
             const toast = document.createElement('div');
-            toast.className = 'alert ${alertClass} alert-dismissible fade show position-fixed';
+            toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             toast.innerHTML = `
                 <span>${message}</span>
@@ -368,21 +390,143 @@
                 }
             }, 3000);
         }
+        
+        let reportModalInstance = null;
+        const reportModalEl = document.getElementById('reportModal');
+        if (reportModalEl) {
+            reportModalInstance = new bootstrap.Modal(reportModalEl);
+        }
+        
+        function openReportModal(targetType, targetId) {
+        	console.log("test1");
+        	if (!reportModalInstance) {
+                console.error('Report modal instance not found!');
+                return;
+            }
+			console.log("test2");
+            // 폼 초기화
+            const form = document.getElementById('reportForm');
+            form.reset();
+            const detailText = document.getElementById('reportDetail');
+            const submitBtn = document.getElementById('reportSubmitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>신고 접수';
+
+            // 신고 대상 정보 모달에 심기
+            document.getElementById('reportTargetType').value = targetType;
+            document.getElementById('reportTargetId').value = targetId;
+
+            // '기타' 사유(RER999)가 아닌 경우 상세 내용 입력란 비활성화
+            const updateDetailState = () => {
+                const selectedReason = form.querySelector('input[name="reportReasonCode"]:checked');
+                if (selectedReason && selectedReason.value === 'RER999') {
+                    detailText.disabled = false;
+                    detailText.placeholder = "기타 사유를 선택한 경우, 상세 내용을 입력해주세요. (1000자 이내)";
+                    detailText.required = true;
+                } else {
+                    detailText.disabled = true;
+                    detailText.placeholder = "기타 사유 선택 시에만 입력 가능합니다.";
+                    detailText.required = false;
+                    detailText.value = "";
+                }
+            };
+            
+            // 라디오 버튼에 이벤트 리스너 추가
+            form.querySelectorAll('input[name="reportReasonCode"]').forEach(radio => {
+                radio.addEventListener('change', updateDetailState);
+            });
+            // 모달 열릴 때 초기 상태 설정
+            updateDetailState();
+            // 모달 열기
+            reportModalInstance.show();
+        }
+
+        /**
+         * 신고 폼 제출 (AJAX)
+         */
+        async function submitReport(event) {
+            event.preventDefault(); // 폼 기본 제출 방지
+            
+            const form = event.target;
+            const submitBtn = document.getElementById('reportSubmitBtn');
+            submitBtn.disabled = true; // 중복 제출 방지
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 접수 중...';
+
+            // CSRF 토큰
+            const token = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
+            const header = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
+
+            if (!token || !header) {
+                showToast('보안 토큰을 찾을 수 없습니다. 페이지를 새로고침 해주세요.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>신고 접수';
+                return;
+            }
+
+            // 폼 데이터 JSON으로 직렬화
+            const formData = new FormData(form);
+            const reportData = {
+                targetType: formData.get('targetType'),
+                targetId: Number(formData.get('targetId')), // 숫자로 변환
+                reportReasonCode: formData.get('reportReasonCode'),
+                reportDetail: formData.get('reportDetail')
+            };
+            
+            // 기타 사유 선택 시 상세 내용 필수 체크
+            if(reportData.reportReasonCode === 'RER999' && (!reportData.reportDetail || reportData.reportDetail.trim() === '')) {
+                 showToast('기타 사유를 선택한 경우, 상세 내용을 반드시 입력해야 합니다.', 'warning');
+                 submitBtn.disabled = false;
+                 submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>신고 접수';
+                 return;
+            }
+
+            try {
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.status === 401) {
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const responseText = await response.text(); // 응답을 텍스트로 우선 받음
+
+                if (response.ok) {
+                    showToast(responseText || '신고가 정상적으로 접수되었습니다.', 'success');
+                    reportModalInstance.hide();
+                } else {
+                    // 400(Validation) 또는 409(Conflict) 에러 처리
+                    showToast(responseText || '신고 접수 중 오류가 발생했습니다.', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showToast('네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'danger');
+            } finally {
+                // 버튼 활성화
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>신고 접수';
+            }
+        }
 
         // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            // 게시글 내용의 링크에 target="_blank" 추가
-            const postContent = document.querySelector('.post-content');
-            if (postContent) {
-                const links = postContent.querySelectorAll('a');
-                links.forEach(link => {
-                    if (link.hostname !== window.location.hostname) {
-                        link.setAttribute('target', '_blank');
-                        link.setAttribute('rel', 'noopener noreferrer');
-                    }
-                });
-            }
-        });
+        const postContent = document.querySelector('.post-content');
+        if (postContent) {
+            const links = postContent.querySelectorAll('a');
+            links.forEach(link => {
+                if (link.hostname !== window.location.hostname) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        }
     </script>
     </th:block>
 </body>
