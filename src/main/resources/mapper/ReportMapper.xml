@@ -32,5 +32,35 @@
             AND target_id = #{targetId}
             AND status_code != 'RPT004' <!-- '반려'-->
     </select>
+    
+    <update id="updateReportStatus">
+        UPDATE reports
+        SET 
+            status_code = #{statusCode},
+            processed_at = NOW(),
+            processed_by = #{processorId}
+        WHERE 
+            id = #{reportId}
+            AND status_code = 'RPT001'
+    </update>
 
+	<select id="selectReportList" resultType="com.petshop.community.dto.ReportAdminViewDto">
+        SELECT 
+            r.id AS reportId,
+            m.username AS reporterName,
+            p.title AS reportedPostTitle,
+            r.target_id AS reportedPostId,
+            r.report_reason_code AS reasonCode,
+            DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i') AS reportedAt,
+            r.status_code AS statusCode
+        FROM 
+            reports r
+        LEFT JOIN members m ON r.reporter_id = m.id
+        LEFT JOIN posts p ON r.target_id = p.id AND r.target_type = 'POST'
+        WHERE
+             r.target_type = 'POST'
+        ORDER BY 
+            FIELD(r.status_code, 'RPT001') DESC,
+            r.created_at DESC 
+    </select>
 </mapper>

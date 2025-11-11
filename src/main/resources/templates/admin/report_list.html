@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>신고 내역 - 관리자 페이지</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <meta name="_csrf" th:content="${_csrf?.token}"/>
+        <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-danger">신고 내역 목록</h1>
+            <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary">대시보드로 돌아가기</a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                미처리 신고 <span class="badge bg-light text-danger">총 <span th:text="${#lists.size(reports)}">N</span>건</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">처리 상태</th>
+                                <th scope="col">신고자</th>
+                                <th scope="col">게시글 정보</th>
+                                <th scope="col">신고 사유</th>
+                                <th scope="col">신고 일시</th>
+                                <th scope="col">처리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="report : ${reports}" th:classappend="${report.processed} ? 'table-secondary' : ''">
+                                <th scope="row" th:text="${report.reportId}">1</th>
+                                <td>
+                                    <!-- th:if/unless로 처리 상태 배지 표시 -->
+                                    <span th:if="${report.processed}" class="badge bg-success">처리 완료</span>
+                                    <span th:unless="${report.processed}" class="badge bg-danger">미처리</span>
+                                </td>
+                                <td th:text="${report.reporterName}">user123</td>
+                                <td>
+                                    <!-- 게시글 ID로 링크 생성 -->
+                                    <a th:href="@{/board/posts/{id}(id=${report.reportedPostId})}" target="_blank" th:text="${report.reportedPostTitle}">강아지 사료 추천합니다.</a>
+                                    <small class="text-muted">(ID: <span th:text="${report.reportedPostId}">101</span>)</small>
+                                </td>
+                                <td th:text="${report.reasonCode}">ADVERTISEMENT</td>
+                                <td th:text="${report.reportedAt}">2025-10-22 14:00</td>
+                                <td>
+                                    <div th:unless="${report.processed}" class="d-grid gap-1">
+                                        <button class="btn btn-sm btn-outline-warning" th:onclick="|processReport(${report.reportId}, 'HIDE_POST', ${report.reportedPostId})|">게시글 숨기기</button>
+                                        <!-- 신고 반려 버튼 -->
+                                        <button class="btn btn-sm btn-outline-success" th:onclick="|processReport(${report.reportId}, 'RESOLVE', null)|">신고 반려</button>
+                                    </div>
+                                    <!-- 처리 완료 시 '-' 표시 -->
+                                    <div th:if="${report.processed}">
+                                        -
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- 신고 내역이 없을 경우 -->
+                            <tr th:if="${#lists.isEmpty(reports)}">
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    현재 미처리된 신고 내역이 없습니다.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- TODO: 페이징 UI 추가 예정 -->
+        </div>
+    </div>
+    
+    <script layout:fragment="script">
+        
+        /**
+         * Spring Security의 CSRF 토큰을 meta 태그에서 읽어오는 헬퍼 함수
+         */
+        function getCsrfToken() {
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            return { token, header };
+        }
+
+        /**
+         * 신고 내역을 처리하는 실제 AJAX 함수.
+         */
+        async function processReport(reportId, action, postId) {
+            let confirmationMessage = '';
+            let apiUrl = `/admin/api/reports/${reportId}/process?action=${action}`;
+
+            if (action === 'HIDE_POST') {
+                confirmationMessage = `[게시글 숨기기] 신고 ID ${reportId}와 게시글 ID ${postId}를 소프트 삭제하고 신고를 처리 완료하시겠습니까?`;
+                // HIDE_POST 액션일 경우, 서비스 레이어에서 postId를 참조할 수 있도록 쿼리 파라미터 추가
+                apiUrl += `&postId=${postId}`; 
+            } else if (action === 'RESOLVE') {
+                confirmationMessage = `[신고 반려] 신고 ID ${reportId}를 '반려(처리 완료)' 상태로 변경하시겠습니까? (게시글은 유지됩니다.)`;
+            } else {
+                alert('유효하지 않은 처리 액션입니다.');
+                return;
+            }
+
+            if (!confirm(confirmationMessage)) {
+                return;
+            }
+            
+            // CSRF 토큰 가져오기
+            const { token, header } = getCsrfToken();
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        [header]: token // CSRF 토큰 헤더에 추가
+                    },
+                });
+
+                if (response.ok) {
+                    alert('성공적으로 처리되었습니다. 페이지를 새로고침합니다.');
+                    window.location.reload(); // 성공 시 페이지 새로고침
+                } else {
+                    const errorText = await response.text();
+                    console.error('신고 처리 실패:', errorText);
+                    alert(`처리 실패: ${errorText}`);
+                }
+            } catch (error) {
+                // 네트워크 에러 등
+                console.error('Fetch Error:', error);
+                alert('신고 처리 중 네트워크 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>

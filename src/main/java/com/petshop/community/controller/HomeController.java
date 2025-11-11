@@ -31,12 +31,6 @@ public class HomeController {
         return "error/403";
     }
 
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard(Model model) {
-        model.addAttribute("title", "관리자 대시보드");
-        return "admin/dashboard";
-    }
-
     @GetMapping("/member/profile")
     public String memberProfile(Model model) {
 
